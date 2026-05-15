@@ -6,6 +6,10 @@ on:
       version:
         required: true
         type: string
+    secrets:
+      PROD_AWS_ROLE:
+        description: "AWS IAM role ARN for ECR public registry authentication"
+        required: true
   workflow_dispatch:
     inputs:
       version:
