@@ -139,4 +139,6 @@ jobs:
     uses: ./.github/workflows/mirror.yml
     with:
       version: ${{ needs.settings.outputs.image_version }}
-    secrets: inherit
+    # F-04 FIX: Explicit secret passing — only AWS role needed (GITHUB_TOKEN is auto-provided)
+    secrets:
+      PROD_AWS_ROLE: ${{ secrets.PROD_AWS_ROLE }}
