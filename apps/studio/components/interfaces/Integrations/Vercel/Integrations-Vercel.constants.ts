@@ -39,8 +39,8 @@ const ENV_VAR_KEYS = {
     key: 'SUPABASE_SERVICE_ROLE_KEY',
     type: 'encrypted',
   },
-  SUPABASE_JWT_SECRET: {
-    key: 'SUPABASE_JWT_SECRET',
+  JWT_SECRET: {
+    key: 'JWT_SECRET',
     type: 'encrypted',
   },
   NEXT_PUBLIC_SUPABASE_ANON_KEY: {
