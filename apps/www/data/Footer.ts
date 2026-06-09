@@ -1,10 +1,14 @@
-import { PrivacySettings } from 'ui-patterns/PrivacySettings'
 import { skillBasedSolutions, useCaseSolutions } from 'data/Solutions'
+import { PrivacySettings } from 'ui-patterns/PrivacySettings'
 
 const footerData = [
   {
     title: 'Product',
     links: [
+      {
+        text: 'Pricing',
+        url: '/pricing',
+      },
       {
         text: 'Database',
         url: '/database',
@@ -34,8 +38,8 @@ const footerData = [
         url: '/modules/cron',
       },
       {
-        text: 'Pricing',
-        url: '/pricing',
+        text: 'Feature Catalog',
+        url: '/features',
       },
       {
         text: 'Launch Week',
@@ -46,6 +50,10 @@ const footerData = [
   {
     title: 'Solutions',
     links: [
+      {
+        text: 'Hosted Postgres',
+        url: '/solutions/hosted-postgres',
+      },
       ...skillBasedSolutions.solutions.map((solution) => ({
         text: solution.text,
         url: solution.url,
@@ -117,8 +125,21 @@ const footerData = [
         url: '/changelog',
       },
       {
-        text: 'Careers',
-        url: '/careers',
+        text: 'RSS',
+        url: '/rss.xml',
+      },
+    ],
+  },
+  {
+    title: 'Community',
+    links: [
+      {
+        text: 'Events & Webinars',
+        url: '/events',
+      },
+      {
+        text: 'SupaSquad',
+        url: '/supasquad',
       },
       {
         text: 'Contributing',
@@ -129,16 +150,8 @@ const footerData = [
         url: '/open-source',
       },
       {
-        text: 'SupaSquad',
-        url: '/supasquad',
-      },
-      {
         text: 'DevTo',
         url: 'https://dev.to/supabase',
-      },
-      {
-        text: 'RSS',
-        url: '/rss.xml',
       },
     ],
   },
@@ -148,6 +161,10 @@ const footerData = [
       {
         text: 'Company',
         url: '/company',
+      },
+      {
+        text: 'Careers',
+        url: '/careers',
       },
       {
         text: 'General Availability',
@@ -188,6 +205,10 @@ const footerData = [
       {
         text: 'Security.txt',
         url: '/.well-known/security.txt',
+      },
+      {
+        text: 'Contact Us',
+        url: '/contact-us',
       },
     ],
   },
