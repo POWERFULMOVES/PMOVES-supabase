@@ -2,21 +2,24 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button, Card, CardContent, cn } from 'ui'
 import { ConfirmationModal } from 'ui-patterns/Dialogs/ConfirmationModal'
+import {
+  PageSection,
+  PageSectionContent,
+  PageSectionDescription,
+  PageSectionMeta,
+  PageSectionSummary,
+  PageSectionTitle,
+} from 'ui-patterns/PageSection'
 
-import { IntegrationImageHandler } from '../IntegrationsSettings'
+import { IntegrationSectionIcon } from '../IntegrationsSettings'
 import { AWSPrivateLinkAccountItem } from './AWSPrivateLinkAccountItem'
 import { AWSPrivateLinkForm } from './AWSPrivateLinkForm'
-import {
-  ScaffoldContainer,
-  ScaffoldSection,
-  ScaffoldSectionContent,
-  ScaffoldSectionDetail,
-} from '@/components/layouts/Scaffold'
 import { ResourceList } from '@/components/ui/Resource/ResourceList'
 import { UpgradeToPro } from '@/components/ui/UpgradeToPro'
 import { useAWSAccountDeleteMutation } from '@/data/aws-accounts/aws-account-delete-mutation'
 import type { AWSAccount } from '@/data/aws-accounts/aws-accounts-query'
 import { useAWSAccountsQuery } from '@/data/aws-accounts/aws-accounts-query'
+import { formatDatabaseID } from '@/data/read-replicas/replicas.utils'
 import { useCheckEntitlements } from '@/hooks/misc/useCheckEntitlements'
 import { useSelectedProjectQuery } from '@/hooks/misc/useSelectedProject'
 import { IS_PLATFORM } from '@/lib/constants'
@@ -57,70 +60,73 @@ export const AWSPrivateLinkSection = () => {
 
   const onConfirmDelete = () => {
     if (selectedAccount && project) {
-      deleteAccount({ projectRef: project.ref, awsAccountId: selectedAccount.aws_account_id })
+      deleteAccount({
+        projectRef: project.ref,
+        awsAccountId: selectedAccount.aws_account_id,
+        databaseIdentifier:
+          selectedAccount.database_type === 'READ_REPLICA'
+            ? selectedAccount.database_identifier
+            : undefined,
+      })
     }
   }
 
   return (
     <>
-      <ScaffoldContainer>
-        <ScaffoldSection className="py-12">
-          <ScaffoldSectionDetail title="AWS PrivateLink">
-            <p>Connect to your Supabase project from your AWS VPC using AWS PrivateLink.</p>
-            <IntegrationImageHandler title="aws" />
-          </ScaffoldSectionDetail>
-          <ScaffoldSectionContent>
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-foreground">
-                    How does the AWS PrivateLink integration work?
-                  </h3>
-                  <p className="text-sm text-foreground-light">
-                    Connecting to AWS PrivateLink allows you to create a private connection between
-                    your AWS VPC and your Supabase project.
-                  </p>
-                </div>
-                {promptPlanUpgrade && (
-                  <UpgradeToPro
-                    layout="vertical"
-                    primaryText="Only available on Team or Enterprise Plan and above"
-                    secondaryText="Connect your AWS VPC privately to your Supabase project using AWS PrivateLink."
-                    buttonText="Upgrade to Team"
-                    source="aws-privatelink-integration"
-                  />
-                )}
+      <PageSection>
+        <PageSectionMeta>
+          <div className="flex flex-1 items-start gap-6">
+            <IntegrationSectionIcon title="aws" />
+            <PageSectionSummary>
+              <PageSectionTitle>AWS PrivateLink</PageSectionTitle>
+              <PageSectionDescription>
+                Connect to your Supabase project from your AWS VPC using AWS PrivateLink. Create a
+                private connection between your AWS VPC and your Supabase project without traffic
+                traversing the public internet.
+              </PageSectionDescription>
+            </PageSectionSummary>
+          </div>
+        </PageSectionMeta>
+        <PageSectionContent>
+          <div className="space-y-6">
+            {promptPlanUpgrade && (
+              <UpgradeToPro
+                layout="vertical"
+                primaryText="Only available on Team or Enterprise Plan and above"
+                secondaryText="Connect your AWS VPC privately to your Supabase project using AWS PrivateLink."
+                buttonText="Upgrade to Team"
+                source="aws-privatelink-integration"
+              />
+            )}
+            <div className={cn(promptPlanUpgrade && 'opacity-25 pointer-events-none')}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-foreground">AWS Accounts</h3>
+                <Button variant="default" onClick={onAddAccount}>
+                  Add account
+                </Button>
               </div>
-              <div className={cn(promptPlanUpgrade && 'opacity-25 pointer-events-none')}>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-foreground">AWS Accounts</h3>
-                  <Button type="default" onClick={onAddAccount}>
-                    Add account
-                  </Button>
-                </div>
-                {(accounts?.length ?? 0) > 0 ? (
-                  <ResourceList>
-                    {accounts?.map((account) => (
-                      <AWSPrivateLinkAccountItem
-                        key={account.aws_account_id}
-                        {...account}
-                        onEdit={() => onEditAccount(account)}
-                        onDelete={() => onDeleteAccount(account)}
-                      />
-                    ))}
-                  </ResourceList>
-                ) : (
-                  <Card>
-                    <CardContent>
-                      <p className="text-foreground-lighter text-sm">No accounts connected</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              {(accounts?.length ?? 0) > 0 ? (
+                <ResourceList>
+                  {accounts?.map((account) => (
+                    <AWSPrivateLinkAccountItem
+                      key={`${account.aws_account_id}-${account.database_identifier ?? 'primary'}`}
+                      {...account}
+                      onEdit={() => onEditAccount(account)}
+                      onDelete={() => onDeleteAccount(account)}
+                    />
+                  ))}
+                </ResourceList>
+              ) : (
+                <Card>
+                  <CardContent>
+                    <p className="text-foreground-lighter text-sm">No accounts connected</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-          </ScaffoldSectionContent>
-        </ScaffoldSection>
-      </ScaffoldContainer>
+          </div>
+        </PageSectionContent>
+      </PageSection>
 
       <AWSPrivateLinkForm account={selectedAccount} open={showForm} onOpenChange={setShowForm} />
 
@@ -136,6 +142,15 @@ export const AWSPrivateLinkSection = () => {
         <p className="text-sm text-foreground-light">
           Are you sure you want to delete the AWS account connection for{' '}
           {selectedAccount?.aws_account_id}?
+        </p>
+        <p className="text-sm text-foreground-lighter mt-1">
+          Database:{' '}
+          {selectedAccount &&
+            ` ${
+              selectedAccount.database_type === 'READ_REPLICA'
+                ? `Read replica (ID: ${selectedAccount.database_identifier ? formatDatabaseID(selectedAccount.database_identifier) : 'Unknown identifier'})`
+                : 'Primary database'
+            }`}
         </p>
       </ConfirmationModal>
     </>

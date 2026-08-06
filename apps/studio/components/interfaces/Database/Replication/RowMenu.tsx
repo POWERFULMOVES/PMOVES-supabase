@@ -9,6 +9,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  WarningIcon,
 } from 'ui'
 import { ShimmeringLoader } from 'ui-patterns/ShimmeringLoader'
 
@@ -18,10 +22,9 @@ import {
   PIPELINE_ENABLE_ALLOWED_FROM,
 } from './Pipeline.utils'
 import { PipelineStatusName } from './Replication.constants'
-import AlertError from '@/components/ui/AlertError'
 import { ReplicationPipelineStatusData } from '@/data/replication/pipeline-status-query'
 import { Pipeline } from '@/data/replication/pipelines-query'
-import { useRestartPipelineHelper } from '@/data/replication/restart-pipeline-helper'
+import { useRestartPipelineMutation } from '@/data/replication/restart-pipeline-mutation'
 import { useStartPipelineMutation } from '@/data/replication/start-pipeline-mutation'
 import { useStopPipelineMutation } from '@/data/replication/stop-pipeline-mutation'
 import {
@@ -63,7 +66,7 @@ export const RowMenu = ({
 
   const { mutateAsync: startPipeline } = useStartPipelineMutation()
   const { mutateAsync: stopPipeline } = useStopPipelineMutation()
-  const { restartPipeline } = useRestartPipelineHelper()
+  const { mutateAsync: restartPipeline } = useRestartPipelineMutation()
   const { getRequestStatus, setRequestStatus: setGlobalRequestStatus } = usePipelineRequestStatus()
   const requestStatus = pipeline?.id
     ? getRequestStatus(pipeline.id)
@@ -134,12 +137,23 @@ export const RowMenu = ({
     <div className="flex justify-end items-center space-x-2">
       {isLoading && <ShimmeringLoader />}
 
-      {isError && <AlertError error={error} subject="Failed to retrieve pipeline status" />}
+      {isError && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex items-center" tabIndex={0}>
+              <WarningIcon />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            Couldn't load status{error?.message ? `: ${error.message}` : '.'}
+          </TooltipContent>
+        </Tooltip>
+      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div className="relative">
-            <Button type="default" className="px-1.5" icon={<MoreVertical />} />
+            <Button variant="default" className="px-1.5" icon={<MoreVertical />} />
             {hasUpdate && (
               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-brand rounded-full" />
             )}

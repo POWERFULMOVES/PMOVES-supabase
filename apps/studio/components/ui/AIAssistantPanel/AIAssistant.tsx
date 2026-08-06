@@ -6,16 +6,17 @@ import { useParams, useSearchParamsShallow } from 'common/hooks'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Eraser, Pencil, X } from 'lucide-react'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, cn, KeyboardShortcut } from 'ui'
-import { Admonition } from 'ui-patterns'
+import { Admonition } from 'ui-patterns/Admonition'
 
-import AlertError from '../AlertError'
+import { AlertError } from '../AlertError'
 import { ButtonTooltip } from '../ButtonTooltip'
 import { ErrorBoundary } from '../ErrorBoundary/ErrorBoundary'
+import { InlineLinkClassName } from '../InlineLink'
 import { ASSISTANT_ERRORS } from './AiAssistant.constants'
-import type { SqlSnippet } from './AIAssistant.types'
 import {
+  containsLogsSnippets,
   hasPendingToolApproval,
   onErrorChat,
   resolvePendingToolApprovalsAsDenied,
@@ -30,6 +31,7 @@ import {
 } from './elements/Conversation'
 import { Message } from './Message'
 import { Markdown } from '@/components/interfaces/Markdown'
+import { resolveSnippetSource } from '@/components/interfaces/SQLEditor/querySource'
 import { SIDEBAR_KEYS } from '@/components/layouts/ProjectLayout/LayoutSidebar/LayoutSidebarProvider'
 import { useCheckOpenAIKeyQuery } from '@/data/ai/check-api-key-query'
 import { useRateMessageMutation } from '@/data/ai/rate-message-mutation'
@@ -39,6 +41,8 @@ import { useLocalStorageQuery } from '@/hooks/misc/useLocalStorage'
 import { useOrgAiOptInLevel } from '@/hooks/misc/useOrgOptedIntoAi'
 import { useSelectedOrganizationQuery } from '@/hooks/misc/useSelectedOrganization'
 import { useSelectedProjectQuery } from '@/hooks/misc/useSelectedProject'
+import type { AssistantMessageMetadata } from '@/lib/ai/assistant-message-metadata'
+import { getParallelApprovalIdsToReject } from '@/lib/ai/message-utils'
 import {
   DEFAULT_ASSISTANT_BASE_MODEL_ID,
   defaultAssistantModelId,
@@ -48,12 +52,12 @@ import {
 import { IS_PLATFORM } from '@/lib/constants'
 import { uuidv4 } from '@/lib/helpers'
 import { useTrack } from '@/lib/telemetry/track'
-import type { AssistantModel } from '@/state/ai-assistant-state'
+import type { AssistantModel, SqlSnippet } from '@/state/ai-assistant-state'
 import { useAiAssistantState, useAiAssistantStateSnapshot } from '@/state/ai-assistant-state'
 import { SHORTCUT_IDS } from '@/state/shortcuts/registry'
 import { useShortcut } from '@/state/shortcuts/useShortcut'
 import { useSidebarManagerSnapshot } from '@/state/sidebar-manager-state'
-import { useSqlEditorV2StateSnapshot } from '@/state/sql-editor-v2'
+import { useSqlEditorV2StateSnapshot } from '@/state/sql-editor/sql-editor-state'
 
 interface AIAssistantProps {
   initialMessages?: MessageType[] | undefined
@@ -62,7 +66,7 @@ interface AIAssistantProps {
 
 export const AIAssistant = ({ className }: AIAssistantProps) => {
   const router = useRouter()
-  const { id: entityId } = useParams()
+  const { id: entityId, source: sourceParam } = useParams()
   const { data: project } = useSelectedProjectQuery()
   const searchParams = useSearchParamsShallow()
 
@@ -70,6 +74,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
     useSelectedOrganizationQuery()
 
   useShortcut(SHORTCUT_IDS.AI_ASSISTANT_CANCEL_EDIT, () => cancelEdit())
+  useShortcut(SHORTCUT_IDS.AI_ASSISTANT_NEW_CHAT, () => snap.newChat())
 
   const disablePrompts = useFlag('disableAssistantPrompts')
   const { snippets } = useSqlEditorV2StateSnapshot()
@@ -105,6 +110,10 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const { aiOptInLevel, isHipaaProjectDisallowed } = useOrgAiOptInLevel()
+  // Whether attached queries are sent at all. One definition, shared by the chat form
+  // (which folds them into the message text) and the message metadata (which states
+  // whether any of them was a logs query), so the two can't disagree.
+  const includeSnippetsInMessage = aiOptInLevel !== 'disabled'
   const showMetadataWarning =
     IS_PLATFORM &&
     !!selectedOrganization &&
@@ -132,6 +141,10 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
   const isInSQLEditor = router.pathname.includes('/sql/[id]')
   const snippet = snippets[entityId ?? '']
   const snippetContent = snippet?.snippet?.content?.unchecked_sql
+
+  const openSnippetSource = isInSQLEditor
+    ? resolveSnippetSource(snippet?.snippet, sourceParam)
+    : undefined
 
   const { data: tables } = useTablesQuery(
     {
@@ -176,7 +189,16 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
 
   const isChatLoading = chatStatus === 'submitted' || chatStatus === 'streaming'
   const hasPendingApproval = hasPendingToolApproval(chatMessages)
-  const isChatInputDisabled = !isApiKeySet || disablePrompts || isLoadingOrganization
+  const supportMetadata = snap.activeChat?.supportMetadata
+  const isSupportChat = !!supportMetadata?.isSupportChat
+  const isSupportChatClosed = isSupportChat && supportMetadata.lifecycleStatus !== 'bot_active'
+  const activeChatId = snap.activeChatId
+  const supportConversationId = supportMetadata?.frontConversationId
+  const isChatInputDisabled =
+    !isApiKeySet || disablePrompts || isLoadingOrganization || isSupportChatClosed
+
+  const branchedFrom = snap.activeChat?.branchedFrom
+  const branchedConversation = branchedFrom ? snap.chats[branchedFrom.chatId] : undefined
 
   const deleteMessageFromHere = useCallback(
     (messageId: string) => {
@@ -281,22 +303,39 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
         const isLastMessage = index === chatMessages.length - 1
 
         return (
-          <Message
-            id={message.id}
-            key={message.id}
-            message={message}
-            isLoading={chatStatus === 'submitted' || chatStatus === 'streaming'}
-            readOnly={message.role === 'user'}
-            addToolApprovalResponse={addToolApprovalResponse}
-            onDelete={deleteMessageFromHere}
-            onEdit={editMessage}
-            isAfterEditedMessage={isAfterEditedMessage}
-            isBeingEdited={isBeingEdited}
-            onCancelEdit={cancelEdit}
-            isLastMessage={isLastMessage}
-            onRate={handleRateMessage}
-            rating={messageRatings[message.id] ?? null}
-          />
+          <Fragment key={message.id}>
+            <Message
+              id={message.id}
+              message={message}
+              isLoading={chatStatus === 'submitted' || chatStatus === 'streaming'}
+              readOnly={message.role === 'user'}
+              addToolApprovalResponse={addToolApprovalResponse}
+              onDelete={deleteMessageFromHere}
+              onEdit={editMessage}
+              isAfterEditedMessage={isAfterEditedMessage}
+              isBeingEdited={isBeingEdited}
+              onCancelEdit={cancelEdit}
+              isLastMessage={isLastMessage}
+              onRate={handleRateMessage}
+              rating={messageRatings[message.id] ?? null}
+            />
+            {branchedConversation && branchedFrom?.messageId === message.id && (
+              <div className="flex items-center gap-2 mt-6">
+                <div className="flex-1 border-t border-strong" />
+                <div className="flex items-center gap-1 max-w-[80%] text-xs text-foreground-lighter">
+                  <span className="shrink-0">Branched from</span>
+                  <button
+                    tabIndex={0}
+                    className={cn(InlineLinkClassName, 'cursor-pointer truncate min-w-0')}
+                    onClick={() => snap.selectChat(branchedConversation.id)}
+                  >
+                    {branchedConversation.name}
+                  </button>
+                </div>
+                <div className="flex-1 border-t border-strong" />
+              </div>
+            )}
+          </Fragment>
         )
       }),
     [
@@ -309,6 +348,9 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
       addToolApprovalResponse,
       handleRateMessage,
       messageRatings,
+      branchedConversation,
+      branchedFrom,
+      snap,
     ]
   )
 
@@ -323,11 +365,23 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
       setEditingMessageId(null)
     }
 
+    // Read off the attachments this message actually carries, so detaching the
+    // "Current Query" chip also drops the claim. Gated on the same condition that
+    // decides whether attachments make it into the text at all: with AI opt-in
+    // disabled the chip is shown but no query is sent, and claiming otherwise would
+    // have the server prepend ClickHouse context for a message holding no query.
+    // Rides on the message rather than the request, so a Retry reproduces the context
+    // the message was asked in.
+    const metadata: AssistantMessageMetadata = {
+      containsLogsSnippets: includeSnippetsInMessage && containsLogsSnippets(snap.sqlSnippets),
+    }
+
     const payload = {
       role: 'user',
       createdAt: new Date(),
       parts: [{ type: 'text', text: finalContent }],
       id: uuidv4(),
+      metadata,
     } as MessageType
 
     snap.clearSqlSnippets()
@@ -367,6 +421,18 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
   }, [isResubmitting, chatStatus, error])
 
   useEffect(() => {
+    // Approval-required tools can't run in parallel. Auto-deny extras so the model reissues them sequentially.
+    for (const id of getParallelApprovalIdsToReject(chatMessages)) {
+      addToolApprovalResponse?.({
+        id,
+        approved: false,
+        reason:
+          'Only one approval-required tool call is allowed per turn. Please reissue this tool call after the current one completes.',
+      })
+    }
+  }, [chatMessages, addToolApprovalResponse])
+
+  useEffect(() => {
     setValue(snap.initialInput || '')
     if (inputRef.current && snap.initialInput) {
       inputRef.current.focus()
@@ -377,10 +443,12 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
   useEffect(() => {
     const isOpen = activeSidebar?.id === SIDEBAR_KEYS.AI_ASSISTANT
     if (isOpen && isInSQLEditor && !!snippetContent) {
-      snap.setSqlSnippets([{ label: 'Current Query', content: snippetContent }])
+      snap.setSqlSnippets([
+        { label: 'Current Query', content: snippetContent, source: openSnippetSource },
+      ])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSidebar?.id, isInSQLEditor, snippetContent])
+  }, [activeSidebar?.id, isInSQLEditor, snippetContent, openSnippetSource])
 
   return (
     <ErrorBoundary
@@ -401,7 +469,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
         },
       ]}
     >
-      <div className={cn('flex flex-col h-full w-full md:h-full max-h-dvh', className)}>
+      <div className={cn('flex bg-card flex-col h-full w-full md:h-full max-h-dvh', className)}>
         <AIAssistantHeader
           isChatLoading={isChatLoading}
           onNewChat={snap.newChat}
@@ -413,7 +481,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
         />
         {hasMessages ? (
           <Conversation className={cn('flex-1')}>
-            <ConversationContent className="w-full px-7 py-8 mb-10">
+            <ConversationContent className="w-full px-7 py-8 mb-10 max-w-3xl mx-auto">
               {renderedMessages}
               {error && (
                 <>
@@ -432,7 +500,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
                       <div className="flex items-center gap-x-2 mr-auto">
                         {isContextExceededError ? (
                           <Button
-                            type="default"
+                            variant="default"
                             size="tiny"
                             onClick={() => snap.newChat()}
                             className="text-xs"
@@ -442,7 +510,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
                         ) : (
                           <>
                             <Button
-                              type="default"
+                              variant="default"
                               size="tiny"
                               onClick={() => regenerate()}
                               className="text-xs"
@@ -450,7 +518,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
                               Retry
                             </Button>
                             <ButtonTooltip
-                              type="default"
+                              variant="default"
                               size="tiny"
                               onClick={handleClearMessages}
                               className="w-7 h-7"
@@ -471,14 +539,16 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
                   className="inline-block w-1.5 h-4 bg-foreground-lighter mt-4"
                 />
               )}
+
               <p className="text-center text-xs text-foreground-muted mt-6">
-                Supabase AI may not always produce correct answers. Double check responses.
+                The Assistant can make mistakes. Double check responses.
               </p>
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
         ) : (
           <AIOnboarding
+            key={snap.activeChatId}
             sqlSnippets={snap.sqlSnippets as SqlSnippet[] | undefined}
             suggestions={
               snap.suggestions as
@@ -516,7 +586,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
                       <span>Editing message</span>
                     </div>
                     <ButtonTooltip
-                      type="outline"
+                      variant="outline"
                       size="tiny"
                       icon={<X size={14} />}
                       onClick={cancelEdit}
@@ -534,7 +604,35 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
           )}
         </AnimatePresence>
 
-        <div className="px-3 pb-3 z-20 relative">
+        <div className="px-3 pb-3 z-20 relative w-full max-w-3xl mx-auto flex flex-col gap-y-3">
+          {isSupportChat && !isSupportChatClosed && (
+            <div>
+              <div className="mb-3 border-t" />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="tiny"
+                  disabled={!activeChatId || !supportConversationId}
+                  onClick={() =>
+                    activeChatId && state.setSupportLifecycleStatus(activeChatId, 'escalated')
+                  }
+                >
+                  Escalate to human
+                </Button>
+                <Button
+                  variant="outline"
+                  size="tiny"
+                  disabled={!activeChatId || !supportConversationId}
+                  onClick={() =>
+                    activeChatId && state.setSupportLifecycleStatus(activeChatId, 'user_resolved')
+                  }
+                >
+                  Resolve
+                </Button>
+              </div>
+            </div>
+          )}
+
           {disablePrompts && (
             <Admonition
               showIcon={false}
@@ -561,17 +659,24 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
           <AssistantChatForm
             textAreaRef={inputRef}
             className={cn(
-              'z-20 [&>form>textarea]:text-base [&>form>textarea]:md:text-sm [&>form>textarea]:border [&>form>textarea]:rounded-md [&>form>textarea]:outline-hidden! [&>form>textarea]:ring-offset-0! [&>form>textarea]:ring-0!'
+              'z-20',
+              '[&>form>textarea]:text-base [&>form>textarea]:md:text-sm [&>form>textarea]:border',
+              '[&>form>textarea]:rounded-md [&>form>textarea]:outline-hidden!',
+              '[&>form>textarea]:ring-offset-0! [&>form>textarea]:ring-0!'
             )}
             loading={isChatLoading}
             isEditing={!!editingMessageId}
             disabled={isChatInputDisabled}
             placeholder={
               hasMessages
-                ? 'Ask a follow up question...'
+                ? isSupportChat
+                  ? 'Share details so the assistant can help with your support request...'
+                  : 'Ask a follow up question...'
                 : (snap.sqlSnippets ?? [])?.length > 0
                   ? 'Ask a question or make a change...'
-                  : 'Chat to Postgres...'
+                  : isSupportChat
+                    ? 'Describe your support issue...'
+                    : 'Chat to Postgres...'
             }
             value={value}
             onValueChange={(e) => setValue(e.target.value)}
@@ -592,7 +697,7 @@ export const AIAssistant = ({ className }: AIAssistantProps) => {
               newSnippets.splice(index, 1)
               snap.setSqlSnippets(newSnippets)
             }}
-            includeSnippetsInMessage={aiOptInLevel !== 'disabled'}
+            includeSnippetsInMessage={includeSnippetsInMessage}
             selectedModel={selectedModel}
             onSelectModel={(model) => snap.setModel(model)}
           />

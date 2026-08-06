@@ -2,7 +2,7 @@ import { Code } from 'lucide-react'
 import Link from 'next/link'
 import type { DragEvent, ReactNode } from 'react'
 import { Button, cn } from 'ui'
-import { Admonition } from 'ui-patterns/admonition'
+import { Admonition } from 'ui-patterns/Admonition'
 import { CodeBlock, type CodeBlockLang } from 'ui-patterns/CodeBlock'
 
 import { ReportBlockContainer } from '@/components/interfaces/Reports/ReportBlock/ReportBlockContainer'
@@ -90,7 +90,7 @@ export const EdgeFunctionBlock = ({
         ) : (
           <>
             <Button
-              type="outline"
+              variant="outline"
               size="tiny"
               loading={isDeploying}
               disabled={disabled || isDeploying}
@@ -115,7 +115,7 @@ export const EdgeFunctionBlock = ({
           </p>
           <div className="flex justify-stretch mt-2 gap-2">
             <Button
-              type="outline"
+              variant="outline"
               size="tiny"
               className="w-full flex-1"
               disabled={isDeploying}
@@ -124,7 +124,7 @@ export const EdgeFunctionBlock = ({
               Cancel
             </Button>
             <Button
-              type="danger"
+              variant="danger"
               size="tiny"
               className="w-full flex-1"
               loading={isDeploying}

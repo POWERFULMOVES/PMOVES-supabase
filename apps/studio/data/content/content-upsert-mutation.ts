@@ -2,9 +2,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import type { Content } from './content-query'
-import { unmapSqlContentField } from './content-remap'
+import { remapWireSnippet, unmapSqlContentField } from './content-remap'
 import { contentKeys } from './keys'
-import type { Snippet } from './sql-folders-query'
+import type { SnippetWithContent } from './sql-folders-query'
 import type { components } from '@/data/api'
 import { handleError, put } from '@/data/fetchers'
 import type { ResponseError, UseCustomMutationOptions } from '@/types'
@@ -23,7 +23,7 @@ export type UpsertContentVariables = {
 export async function upsertContent(
   { projectRef, payload }: UpsertContentVariables,
   signal?: AbortSignal
-) {
+): Promise<SnippetWithContent | null> {
   const { data, error } = await put('/platform/projects/{ref}/content', {
     params: { path: { ref: projectRef } },
     body: unmapSqlContentField(payload),
@@ -31,8 +31,9 @@ export async function upsertContent(
     signal,
   })
   if (error) handleError(error)
+  if (!data) return null
 
-  return data as Snippet | null
+  return remapWireSnippet(data, 'saved')
 }
 
 export type UpsertContentData = Awaited<ReturnType<typeof upsertContent>>

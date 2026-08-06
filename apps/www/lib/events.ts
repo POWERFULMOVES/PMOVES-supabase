@@ -73,10 +73,10 @@ function getMultiSelect(page: any, name: string): string[] {
   return prop.multi_select.map((s: any) => s.name)
 }
 
-function getSelect(page: any, name: string): string {
+function getFormulaString(page: any, name: string): string {
   const prop = page.properties[name]
-  if (!prop || prop.type !== 'select') return ''
-  return prop.select?.name ?? ''
+  if (!prop || prop.type !== 'formula' || prop.formula?.type !== 'string') return ''
+  return prop.formula.string ?? ''
 }
 
 // ─── Main fetch ─────────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ export const getNotionEvents = async (): Promise<SupabaseEvent[]> => {
 
     return pages
       .map((page): SupabaseEvent | null => {
-        const title = getTitle(page)
+        const title = getFormulaString(page, 'Publish to Web Title') || getTitle(page)
         const startDate = getDate(page, 'Start Date')
         if (!title || !startDate) return null
 
@@ -116,10 +116,6 @@ export const getNotionEvents = async (): Promise<SupabaseEvent[]> => {
         const rawMeetingLink = getUrl(page, 'Book Meeting Link')
         const meetingLink = isSafeHttpUrl(rawMeetingLink) ? rawMeetingLink : ''
         const location = getRichText(page, 'Location')
-        const notionType = getSelect(page, 'Type')
-        // "Conference" events are third-party — we attend but don't host, so no
-        // "Hosted by" line. "Supabase event" → host = Supabase.
-        const isConferenceType = notionType.toLowerCase() === 'conference'
         const categories = ['conference']
         const speakingAnswers = getMultiSelect(page, 'Are you speaking at this event?')
         const isSpeaking = speakingAnswers.includes('Yes')
@@ -139,7 +135,9 @@ export const getNotionEvents = async (): Promise<SupabaseEvent[]> => {
           categories,
           timezone: '',
           location,
-          hosts: isConferenceType ? [] : [SUPABASE_HOST],
+          // Notion events are third-party — Supabase attends but does not host,
+          // so no "Hosted by" line. Only Luma events are Supabase-hosted.
+          hosts: [],
           source: 'notion',
           disable_page_build: true,
           isSpeaking,
@@ -271,10 +269,15 @@ function getAllParsedMdxEvents(): SupabaseEvent[] {
 /**
  * Read all events under `_events/` and return today-and-future events.
  * Past events are excluded (by end_date when present, otherwise start date).
+ * Events already flipped to `onDemand: true` are excluded too — they've
+ * already happened and belong in the on-demand bucket (getOnDemandMdxEvents),
+ * not the upcoming one, regardless of how their UTC-converted date compares to today.
  */
 export const getMdxEvents = (): SupabaseEvent[] => {
   const today = startOfTodayUtc()
-  return getAllParsedMdxEvents().filter((event) => new Date(event.end_date ?? event.date) >= today)
+  return getAllParsedMdxEvents().filter(
+    (event) => !event.onDemand && new Date(event.end_date ?? event.date) >= today
+  )
 }
 
 /** All MDX events with `onDemand: true`, including past recordings. */

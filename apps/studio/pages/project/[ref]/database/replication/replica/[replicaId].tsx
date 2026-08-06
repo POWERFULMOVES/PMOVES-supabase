@@ -6,16 +6,16 @@ import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { AWS_REGIONS } from 'shared-data'
 import { Badge, Button } from 'ui'
-import { ShimmeringLoader } from 'ui-patterns'
+import { ShimmeringLoader } from 'ui-patterns/ShimmeringLoader'
 
+import { DropReplicaConfirmationModal } from '@/components/interfaces/Database/Replication/ReadReplicas/DropReplicaConfirmationModal'
 import { ReadReplicaDetails } from '@/components/interfaces/Database/Replication/ReadReplicas/ReadReplicaDetails'
 import {
   getIsInTransition,
   getStatusLabel,
 } from '@/components/interfaces/Database/Replication/ReadReplicas/ReadReplicas.utils'
-import { DropReplicaConfirmationModal } from '@/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/DropReplicaConfirmationModal'
-import { REPLICA_STATUS } from '@/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/InstanceConfiguration.constants'
-import { RestartReplicaConfirmationModal } from '@/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/RestartReplicaConfirmationModal'
+import { RestartReplicaConfirmationModal } from '@/components/interfaces/Database/Replication/ReadReplicas/RestartReplicaConfirmationModal'
+import { REPLICA_STATUS } from '@/components/interfaces/Database/Replication/Replication.constants'
 import DatabaseLayout from '@/components/layouts/DatabaseLayout/DatabaseLayout'
 import { DefaultLayout } from '@/components/layouts/DefaultLayout'
 import { PageLayout } from '@/components/layouts/PageLayout/PageLayout'
@@ -113,7 +113,7 @@ const DatabaseReadReplicaPage: NextPageWithLayout = () => {
         ) : (
           <div className="flex items-center gap-x-2 mt-0!">
             <ScaffoldDescription>ID: {identifier}</ScaffoldDescription>
-            <CopyButton iconOnly type="default" text={identifier ?? ''} />
+            <CopyButton iconOnly variant="default" text={identifier ?? ''} />
           </div>
         )
       }
@@ -133,7 +133,7 @@ const DatabaseReadReplicaPage: NextPageWithLayout = () => {
       ]}
       secondaryActions={
         <ButtonTooltip
-          type="default"
+          variant="default"
           className="w-7"
           icon={<Trash />}
           tooltip={{
@@ -143,7 +143,7 @@ const DatabaseReadReplicaPage: NextPageWithLayout = () => {
         />
       }
       primaryActions={[
-        <Button asChild key="logs" type="default">
+        <Button asChild key="logs" variant="default">
           <Link
             href={`/project/${ref}/logs/postgres-logs${!!identifier ? `?db=${identifier}` : ''}`}
           >
@@ -152,7 +152,7 @@ const DatabaseReadReplicaPage: NextPageWithLayout = () => {
         </Button>,
         <Button
           key="drop"
-          type="default"
+          variant="default"
           disabled={status !== 'ACTIVE_HEALTHY'}
           onClick={() => setShowConfirmRestart(true)}
         >

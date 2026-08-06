@@ -3,7 +3,7 @@ import { useParams } from 'common'
 import { Eye, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button, cn, Form, FormControl, FormField, Separator } from 'ui'
 import { Input } from 'ui-patterns/DataInputs/Input'
@@ -55,6 +55,8 @@ export const ResetPasswordForm = () => {
     mode: 'onChange',
   })
 
+  const password = useWatch({ control: form.control, name: 'password' })
+
   const onResetPassword = async (data: FormData) => {
     const toastId = toast.loading('Saving password...')
     const { error } = await auth.updateUser({
@@ -76,7 +78,7 @@ export const ResetPasswordForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onResetPassword)} className="space-y-4 pt-4">
+      <form method="POST" onSubmit={form.handleSubmit(onResetPassword)} className="space-y-4 pt-4">
         {requireCurrentPassword && (
           <FormField
             control={form.control}
@@ -92,7 +94,7 @@ export const ResetPasswordForm = () => {
                     actions={
                       <Button
                         icon={currentPasswordHidden ? <Eye /> : <EyeOff />}
-                        type="default"
+                        variant="default"
                         className="w-7"
                         onClick={() => setCurrentPasswordHidden((prev) => !prev)}
                       />
@@ -124,7 +126,7 @@ export const ResetPasswordForm = () => {
                   actions={
                     <Button
                       icon={passwordHidden ? <Eye /> : <EyeOff />}
-                      type="default"
+                      variant="default"
                       className="w-7"
                       onClick={() => setPasswordHidden((prev) => !prev)}
                     />
@@ -146,14 +148,14 @@ export const ResetPasswordForm = () => {
             'transition-all duration-400 overflow-y-hidden'
           )}
         >
-          <PasswordConditionsHelper password={form.watch('password')} />
+          <PasswordConditionsHelper password={password} />
         </div>
 
         <Separator className="bg-border" />
 
         <Button
           block
-          htmlType="submit"
+          type="submit"
           size="medium"
           disabled={form.formState.isSubmitting}
           loading={form.formState.isSubmitting}

@@ -3,7 +3,7 @@ import { LOCAL_STORAGE_KEYS, useParams } from 'common'
 import { CheckCircle, Download, Loader } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from 'ui'
-import { Admonition } from 'ui-patterns/admonition'
+import { Admonition } from 'ui-patterns/Admonition'
 
 import { SupportLink } from '@/components/interfaces/Support/SupportLink'
 import { ButtonTooltip } from '@/components/ui/ButtonTooltip'
@@ -147,7 +147,7 @@ export const RestoringState = () => {
                       layout="responsive"
                       description="Contact support if this project remains in a restoring state."
                       actions={
-                        <Button asChild type="default">
+                        <Button asChild variant="default">
                           <SupportLink
                             queryParams={{
                               category: SupportCategories.DATABASE_UNRESPONSIVE,
@@ -168,7 +168,7 @@ export const RestoringState = () => {
             </div>
             <div className="border-t border-overlay flex items-center justify-end py-4 px-8 gap-x-2">
               <ButtonTooltip
-                type="default"
+                variant="default"
                 icon={<Download />}
                 loading={isDownloading}
                 disabled={logicalBackups.length === 0}

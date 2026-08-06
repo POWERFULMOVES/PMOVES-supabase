@@ -22,8 +22,9 @@ import {
   TooltipTrigger,
 } from 'ui'
 
+import { REPLICA_STATUS } from '../interfaces/Database/Replication/Replication.constants'
 import { Markdown } from '@/components/interfaces/Markdown'
-import { REPLICA_STATUS } from '@/components/interfaces/Settings/Infrastructure/InfrastructureConfiguration/InstanceConfiguration.constants'
+import { getInfrastructurePath } from '@/components/interfaces/Settings/Infrastructure/Infrastructure.utils'
 import { useReadReplicasQuery } from '@/data/read-replicas/replicas-query'
 import { formatDatabaseID, formatDatabaseRegion } from '@/data/read-replicas/replicas.utils'
 import { useIsFeatureEnabled } from '@/hooks/misc/useIsFeatureEnabled'
@@ -73,7 +74,7 @@ export const DatabaseSelector = ({
 
   const selectedAdditionalOption = additionalOptions.find((x) => x.id === selectedDatabaseId)
 
-  const newReplicaURL = `/project/${projectRef}/database/replication?type=Read+Replica`
+  const newReplicaURL = `/project/${projectRef}/database/replication?destinationType=Read+Replica`
 
   useEffect(() => {
     if (_selectedDatabaseId && !isForm) state.setSelectedDatabaseId(_selectedDatabaseId)
@@ -90,7 +91,7 @@ export const DatabaseSelector = ({
             </span>
           )}
           <Button
-            type="default"
+            variant="default"
             icon={isLoading && <Loader2 className="animate-spin" />}
             iconRight={<ChevronDown strokeWidth={1.5} size={12} />}
             {...buttonProps}
@@ -177,7 +178,7 @@ export const DatabaseSelector = ({
                         <TooltipContent side="right" className="w-80">
                           <Markdown
                             className="text-xs text-foreground"
-                            content={`Replica unable to accept requests as its ${status}. [View infrastructure settings](/project/${projectRef}/settings/infrastructure) for more information.`}
+                            content={`Replica unable to accept requests as its ${status}. [View infrastructure settings](${getInfrastructurePath(projectRef)}) for more information.`}
                           />
                         </TooltipContent>
                       </Tooltip>
@@ -213,6 +214,7 @@ export const DatabaseSelector = ({
                 })}
               </ScrollArea>
             </CommandGroup>
+
             {IS_PLATFORM && infrastructureReadReplicas && (
               <CommandGroup className="border-t">
                 <CommandItem

@@ -79,6 +79,7 @@ vi.mock('common', () => ({
       `free-micro-upgrade-banner-dismissed-${ref}`,
     PROJECT_INTEGRATION_BANNER_DISMISSED: (ref: string, integrationSource: string) =>
       `project-integration-banner-dismissed-${ref}-${integrationSource}`,
+    UNIFIED_LOGS_BANNER_DISMISSED: 'unified-logs-banner-dismissed',
   },
   isFeatureEnabled: () => false,
 }))
@@ -137,7 +138,7 @@ vi.mock('./PausedState/ProjectPausedState', () => ({ ProjectPausedState: () => n
 vi.mock('./PauseFailedState', () => ({ PauseFailedState: () => null }))
 vi.mock('./PausingState', () => ({ PausingState: () => null }))
 vi.mock('./ProductMenuBar', () => ({
-  default: ({ children }: { children: ReactNode }) => <>{children}</>,
+  ProductMenuBar: ({ children }: { children: ReactNode }) => <>{children}</>,
 }))
 vi.mock('./ResizingState', () => ({ ResizingState: () => null }))
 vi.mock('./RestartingState', () => ({ default: () => null }))
@@ -155,7 +156,11 @@ vi.mock('@/components/ui/ResourceExhaustionWarningBanner/ResourceExhaustionWarni
   ResourceExhaustionWarningBanner: () => null,
 }))
 vi.mock('@/components/ui/ButtonTooltip', () => ({
-  ButtonTooltip: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  ButtonTooltip: ({ children, ...props }: any) => (
+    <button tabIndex={0} {...props}>
+      {children}
+    </button>
+  ),
 }))
 vi.mock('@/components/ui/PartnerIcon', () => ({
   default: () => <div data-testid="partner-icon" />,
@@ -170,7 +175,10 @@ vi.mock('@/hooks/misc/useLocalStorage', () => ({
 }))
 
 vi.mock('@/components/ui/BannerStack/BannerStackProvider', () => ({
-  BANNER_ID: { FREE_MICRO_UPGRADE: 'free-micro-upgrade-banner' },
+  BANNER_ID: {
+    FREE_MICRO_UPGRADE: 'free-micro-upgrade-banner',
+    UNIFIED_LOGS: 'unified-logs-banner',
+  },
   useBannerStack: () => ({
     addBanner: mockAddBanner,
     dismissBanner: mockDismissBanner,
@@ -180,6 +188,19 @@ vi.mock('@/components/ui/BannerStack/BannerStackProvider', () => ({
 
 vi.mock('@/components/ui/BannerStack/Banners/BannerFreeMicroUpgrade', () => ({
   BannerFreeMicroUpgrade: () => null,
+}))
+
+vi.mock('@/components/ui/BannerStack/Banners/BannerUnifiedLogs', () => ({
+  BannerUnifiedLogs: () => null,
+}))
+
+vi.mock('@/components/interfaces/App/FeaturePreview/FeaturePreviewContext', () => ({
+  useUnifiedLogsPreview: () => ({
+    isEnabled: false,
+    isLoading: false,
+    enable: () => {},
+    disable: () => {},
+  }),
 }))
 
 vi.mock('@/data/usage/resource-warnings-query', () => ({
@@ -374,7 +395,9 @@ describe('FREE_MICRO_UPGRADE banner', () => {
     await waitFor(() => {
       expect(mockDismissBanner).toHaveBeenCalledWith('free-micro-upgrade-banner')
     })
-    expect(mockAddBanner).not.toHaveBeenCalled()
+    expect(mockAddBanner).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'free-micro-upgrade-banner' })
+    )
   })
 
   it('calls dismissBanner when compute warnings are cleared', async () => {
@@ -392,7 +415,9 @@ describe('FREE_MICRO_UPGRADE banner', () => {
     await waitFor(() => {
       expect(mockDismissBanner).toHaveBeenCalledWith('free-micro-upgrade-banner')
     })
-    expect(mockAddBanner).not.toHaveBeenCalled()
+    expect(mockAddBanner).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'free-micro-upgrade-banner' })
+    )
   })
 
   it('calls dismissBanner when project is not nano compute', async () => {
@@ -403,6 +428,8 @@ describe('FREE_MICRO_UPGRADE banner', () => {
     await waitFor(() => {
       expect(mockDismissBanner).toHaveBeenCalledWith('free-micro-upgrade-banner')
     })
-    expect(mockAddBanner).not.toHaveBeenCalled()
+    expect(mockAddBanner).not.toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'free-micro-upgrade-banner' })
+    )
   })
 })

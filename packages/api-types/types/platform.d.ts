@@ -469,6 +469,57 @@ export interface paths {
     patch: operations['LinkConversationController_updateConversationCustomFields']
     trace?: never
   }
+  '/platform/feedback/conversations/escalation': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Escalate an AI support conversation in Front */
+    post: operations['ConversationSyncController_escalateConversation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/platform/feedback/conversations/messages': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Sync AI support chat messages to Front */
+    post: operations['ConversationSyncController_syncConversationMessages']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/platform/feedback/conversations/resolve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Resolve an AI support conversation in Front */
+    post: operations['ConversationSyncController_resolveConversation']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/platform/feedback/docs': {
     parameters: {
       query?: never
@@ -2456,6 +2507,23 @@ export interface paths {
     patch: operations['ProjectsRefController_updateProject']
     trace?: never
   }
+  '/platform/projects/{ref}/analytics/endpoints/api_keys.last_used.otel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Gets the project's last-used API keys */
+    get: operations['ApiKeysLastUsedController_getApiKeysLastUsed']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/platform/projects/{ref}/analytics/endpoints/auth.metrics': {
     parameters: {
       query?: never
@@ -2569,6 +2637,23 @@ export interface paths {
     }
     /** Gets a project's metrics */
     get: operations['ProjectMetricsController_getProjectMetrics']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/platform/projects/{ref}/analytics/endpoints/project.metrics.otel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Gets a project's metrics from the OTel/ClickHouse backend */
+    get: operations['ProjectMetricsOtelController_getProjectMetricsOtel']
     put?: never
     post?: never
     delete?: never
@@ -3572,6 +3657,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/platform/projects/{ref}/wake': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Wakes a specific project that belongs to the authenticated user */
+    post: operations['ProjectWakeController_wakeUpProject']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/platform/projects/available-regions': {
     parameters: {
       query?: never
@@ -3777,6 +3879,26 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/platform/replication/{ref}/pipelines/{pipeline_id}/restart': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * Restart pipeline
+     * @description Restart the pipeline. Requires bearer auth and an active, healthy project. Fails with a conflict if the pipeline is not currently running.
+     */
+    post: operations['ReplicationPipelinesController_restartPipeline']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/platform/replication/{ref}/pipelines/{pipeline_id}/rollback-tables': {
     parameters: {
       query?: never
@@ -3968,6 +4090,26 @@ export interface paths {
      * @description Delete a publication for a source. Requires bearer auth and an active, healthy project.
      */
     delete: operations['ReplicationSourcesController_deletePublication']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/platform/replication/{ref}/sources/{source_id}/publications/{publication_name}/cost-estimate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * Estimate replication cost for a publication
+     * @description Estimate the cost of replicating a publication's tables. Returns the flat per-pipeline fee, a per-table breakdown of the one-time initial-copy cost derived from the tables’ on-disk size, and the usage-based streaming rate. Requires bearer auth and an active, healthy project.
+     */
+    get: operations['ReplicationSourcesController_getCostEstimate']
+    put?: never
+    post?: never
+    delete?: never
     options?: never
     head?: never
     patch?: never
@@ -5033,7 +5175,10 @@ export interface components {
         reasons: (
           | 'AWS_ACTIVATE_CREDITS_DEAL'
           | 'AGREEMENT_BASED_OFFER'
-          | 'NO_ACTIVE_CONTRACT_FOUND'
+          | 'NO_CONTRACT_FOUND'
+          | 'CONTRACT_INACTIVE'
+          | 'CONTRACT_TERMINATED_EARLY'
+          | 'CONTRACT_IN_SETTLING_WINDOW'
         )[]
       }
     }
@@ -5740,7 +5885,7 @@ export interface components {
                * @description Number of concurrent BigQuery Storage Write API connections.
                * @example 8
                */
-              connection_pool_size?: number
+              connection_pool_size?: number | null
               /**
                * @description BigQuery dataset id
                * @example analytics
@@ -5750,7 +5895,7 @@ export interface components {
                * @description Maximum data staleness in minutes
                * @example 5
                */
-              max_staleness_mins?: number
+              max_staleness_mins?: number | null
               /**
                * @description BigQuery project id
                * @example my-gcp-project
@@ -5758,6 +5903,33 @@ export interface components {
               project_id: string
               /** @description BigQuery service account key */
               service_account_key: string
+            }
+          }
+        | {
+            clickhouse: {
+              /**
+               * @description ClickHouse target database
+               * @example analytics
+               */
+              database: string
+              /**
+               * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+               * @example replacing_merge_tree
+               * @enum {string}
+               */
+              engine?: 'merge_tree' | 'replacing_merge_tree'
+              /** @description ClickHouse password. Omit for passwordless access. */
+              password?: string | null
+              /**
+               * @description ClickHouse HTTPS endpoint URL
+               * @example https://clickhouse.example.com:8443
+               */
+              url: string
+              /**
+               * @description ClickHouse user name
+               * @example default
+               */
+              user: string
             }
           }
         | {
@@ -5772,7 +5944,7 @@ export interface components {
                  * @description Namespace
                  * @example my-namespace
                  */
-                namespace?: string
+                namespace?: string | null
                 /**
                  * @description Project ref
                  * @example abcdefghijklmnopqrst
@@ -5802,60 +5974,212 @@ export interface components {
             }
           }
         | {
-            ducklake: {
+            ducklake:
+              | {
+                  /**
+                   * @description DuckLake catalog URL
+                   * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                   */
+                  catalog_url: string
+                  /**
+                   * @description DuckLake data path
+                   * @example s3://<bucket-name>/
+                   */
+                  data_path: string
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @default ducklake
+                   * @example ducklake
+                   */
+                  metadata_schema?: string
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  /**
+                   * @description S3-compatible storage access key ID
+                   * @example my-access-key
+                   */
+                  s3_access_key_id?: string | null
+                  /**
+                   * @description S3-compatible storage endpoint
+                   * @example 127.0.0.1:5000/s3
+                   */
+                  s3_endpoint?: string | null
+                  /**
+                   * @description S3-compatible storage region
+                   * @example us-east-1
+                   */
+                  s3_region?: string | null
+                  /**
+                   * @description S3-compatible storage secret access key
+                   * @example my-secret-key
+                   */
+                  s3_secret_access_key?: string | null
+                  /**
+                   * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                   * @example path
+                   * @enum {string|null}
+                   */
+                  s3_url_style?: 'path' | 'vhost' | null
+                  /**
+                   * @description Whether to use SSL for S3-compatible storage
+                   * @default true
+                   * @example false
+                   */
+                  s3_use_ssl?: boolean
+                }
+              | {
+                  catalog:
+                    | {
+                        /**
+                         * @description DuckLake catalog URL
+                         * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                         */
+                        catalog_url: string
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /** @enum {string} */
+                        type: 'postgres_url'
+                      }
+                    | {
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /**
+                         * @description Supabase project ref used as the DuckLake PostgreSQL catalog
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_project'
+                      }
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @default ducklake
+                   * @example ducklake
+                   */
+                  metadata_schema?: string
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  storage:
+                    | {
+                        /**
+                         * @description DuckLake data path
+                         * @example s3://<bucket-name>/
+                         */
+                        data_path: string
+                        /**
+                         * @description S3-compatible storage access key ID
+                         * @example my-access-key
+                         */
+                        s3_access_key_id: string
+                        /**
+                         * @description S3-compatible storage endpoint
+                         * @example 127.0.0.1:5000/s3
+                         */
+                        s3_endpoint: string
+                        /**
+                         * @description S3-compatible storage region
+                         * @example us-east-1
+                         */
+                        s3_region: string
+                        /**
+                         * @description S3-compatible storage secret access key
+                         * @example my-secret-key
+                         */
+                        s3_secret_access_key: string
+                        /**
+                         * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                         * @example path
+                         * @enum {string|null}
+                         */
+                        s3_url_style?: 'path' | 'vhost' | null
+                        /**
+                         * @description Whether to use SSL for S3-compatible storage
+                         * @default true
+                         * @example false
+                         */
+                        s3_use_ssl?: boolean
+                        /** @enum {string} */
+                        type: 's3'
+                      }
+                    | {
+                        /**
+                         * @description Storage bucket id used for DuckLake data files
+                         * @example ducklake
+                         */
+                        bucket: string
+                        /**
+                         * @description Optional description for the generated Supabase Storage S3 credential
+                         * @example DuckLake replication destination
+                         */
+                        credential_description?: string
+                        /**
+                         * @description Optional path prefix inside the bucket for DuckLake data files
+                         * @example replication
+                         */
+                        path?: string
+                        /**
+                         * @description Supabase project ref whose Object Storage S3 API stores DuckLake data files
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_storage'
+                      }
+                }
+          }
+        | {
+            snowflake: {
               /**
-               * @description DuckLake catalog URL
-               * @example postgres://user:pass@localhost:5432/ducklake_catalog
+               * @description Snowflake account identifier
+               * @example MYORG-MYACCOUNT
                */
-              catalog_url: string
+              account_id: string
               /**
-               * @description DuckLake data path
-               * @example s3://<bucket-name>/
+               * @description Snowflake target database
+               * @example ANALYTICS
                */
-              data_path: string
+              database: string
+              /** @description Snowflake RSA private key PEM contents */
+              private_key: string
+              /** @description Optional passphrase for encrypted private keys */
+              private_key_passphrase?: string | null
               /**
-               * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-               * @default ducklake
-               * @example ducklake
+               * @description Optional Snowflake role
+               * @example ETL_ROLE
                */
-              metadata_schema?: string
+              role?: string | null
               /**
-               * @description Number of concurrent DuckDB connections.
-               * @example 4
+               * @description Snowflake target schema
+               * @example PUBLIC
                */
-              pool_size?: number
+              schema: string
               /**
-               * @description S3-compatible storage access key ID
-               * @example my-access-key
+               * @description Snowflake user configured for key-pair authentication
+               * @example ETL_USER
                */
-              s3_access_key_id: string
-              /**
-               * @description S3-compatible storage endpoint
-               * @example 127.0.0.1:5000/s3
-               */
-              s3_endpoint: string
-              /**
-               * @description S3-compatible storage region
-               * @example us-east-1
-               */
-              s3_region: string
-              /**
-               * @description S3-compatible storage secret access key
-               * @example my-secret-key
-               */
-              s3_secret_access_key: string
-              /**
-               * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
-               * @example path
-               * @enum {string}
-               */
-              s3_url_style?: 'path' | 'vhost'
-              /**
-               * @description Whether to use SSL for S3-compatible storage
-               * @default true
-               * @example false
-               */
-              s3_use_ssl?: boolean
+              user: string
             }
           }
       /**
@@ -5873,7 +6197,7 @@ export interface components {
                * @description Number of concurrent BigQuery Storage Write API connections.
                * @example 8
                */
-              connection_pool_size?: number
+              connection_pool_size?: number | null
               /**
                * @description BigQuery dataset id
                * @example analytics
@@ -5883,7 +6207,7 @@ export interface components {
                * @description Maximum data staleness in minutes
                * @example 5
                */
-              max_staleness_mins?: number
+              max_staleness_mins?: number | null
               /**
                * @description BigQuery project id
                * @example my-gcp-project
@@ -5891,6 +6215,33 @@ export interface components {
               project_id: string
               /** @description BigQuery service account key */
               service_account_key: string
+            }
+          }
+        | {
+            clickhouse: {
+              /**
+               * @description ClickHouse target database
+               * @example analytics
+               */
+              database: string
+              /**
+               * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+               * @example replacing_merge_tree
+               * @enum {string}
+               */
+              engine?: 'merge_tree' | 'replacing_merge_tree'
+              /** @description ClickHouse password. Omit for passwordless access. */
+              password?: string | null
+              /**
+               * @description ClickHouse HTTPS endpoint URL
+               * @example https://clickhouse.example.com:8443
+               */
+              url: string
+              /**
+               * @description ClickHouse user name
+               * @example default
+               */
+              user: string
             }
           }
         | {
@@ -5905,7 +6256,7 @@ export interface components {
                  * @description Namespace
                  * @example my-namespace
                  */
-                namespace?: string
+                namespace?: string | null
                 /**
                  * @description Project ref
                  * @example abcdefghijklmnopqrst
@@ -5935,60 +6286,212 @@ export interface components {
             }
           }
         | {
-            ducklake: {
+            ducklake:
+              | {
+                  /**
+                   * @description DuckLake catalog URL
+                   * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                   */
+                  catalog_url: string
+                  /**
+                   * @description DuckLake data path
+                   * @example s3://<bucket-name>/
+                   */
+                  data_path: string
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @default ducklake
+                   * @example ducklake
+                   */
+                  metadata_schema?: string
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  /**
+                   * @description S3-compatible storage access key ID
+                   * @example my-access-key
+                   */
+                  s3_access_key_id?: string | null
+                  /**
+                   * @description S3-compatible storage endpoint
+                   * @example 127.0.0.1:5000/s3
+                   */
+                  s3_endpoint?: string | null
+                  /**
+                   * @description S3-compatible storage region
+                   * @example us-east-1
+                   */
+                  s3_region?: string | null
+                  /**
+                   * @description S3-compatible storage secret access key
+                   * @example my-secret-key
+                   */
+                  s3_secret_access_key?: string | null
+                  /**
+                   * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                   * @example path
+                   * @enum {string|null}
+                   */
+                  s3_url_style?: 'path' | 'vhost' | null
+                  /**
+                   * @description Whether to use SSL for S3-compatible storage
+                   * @default true
+                   * @example false
+                   */
+                  s3_use_ssl?: boolean
+                }
+              | {
+                  catalog:
+                    | {
+                        /**
+                         * @description DuckLake catalog URL
+                         * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                         */
+                        catalog_url: string
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /** @enum {string} */
+                        type: 'postgres_url'
+                      }
+                    | {
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /**
+                         * @description Supabase project ref used as the DuckLake PostgreSQL catalog
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_project'
+                      }
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @default ducklake
+                   * @example ducklake
+                   */
+                  metadata_schema?: string
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  storage:
+                    | {
+                        /**
+                         * @description DuckLake data path
+                         * @example s3://<bucket-name>/
+                         */
+                        data_path: string
+                        /**
+                         * @description S3-compatible storage access key ID
+                         * @example my-access-key
+                         */
+                        s3_access_key_id: string
+                        /**
+                         * @description S3-compatible storage endpoint
+                         * @example 127.0.0.1:5000/s3
+                         */
+                        s3_endpoint: string
+                        /**
+                         * @description S3-compatible storage region
+                         * @example us-east-1
+                         */
+                        s3_region: string
+                        /**
+                         * @description S3-compatible storage secret access key
+                         * @example my-secret-key
+                         */
+                        s3_secret_access_key: string
+                        /**
+                         * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                         * @example path
+                         * @enum {string|null}
+                         */
+                        s3_url_style?: 'path' | 'vhost' | null
+                        /**
+                         * @description Whether to use SSL for S3-compatible storage
+                         * @default true
+                         * @example false
+                         */
+                        s3_use_ssl?: boolean
+                        /** @enum {string} */
+                        type: 's3'
+                      }
+                    | {
+                        /**
+                         * @description Storage bucket id used for DuckLake data files
+                         * @example ducklake
+                         */
+                        bucket: string
+                        /**
+                         * @description Optional description for the generated Supabase Storage S3 credential
+                         * @example DuckLake replication destination
+                         */
+                        credential_description?: string
+                        /**
+                         * @description Optional path prefix inside the bucket for DuckLake data files
+                         * @example replication
+                         */
+                        path?: string
+                        /**
+                         * @description Supabase project ref whose Object Storage S3 API stores DuckLake data files
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_storage'
+                      }
+                }
+          }
+        | {
+            snowflake: {
               /**
-               * @description DuckLake catalog URL
-               * @example postgres://user:pass@localhost:5432/ducklake_catalog
+               * @description Snowflake account identifier
+               * @example MYORG-MYACCOUNT
                */
-              catalog_url: string
+              account_id: string
               /**
-               * @description DuckLake data path
-               * @example s3://<bucket-name>/
+               * @description Snowflake target database
+               * @example ANALYTICS
                */
-              data_path: string
+              database: string
+              /** @description Snowflake RSA private key PEM contents */
+              private_key: string
+              /** @description Optional passphrase for encrypted private keys */
+              private_key_passphrase?: string | null
               /**
-               * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-               * @default ducklake
-               * @example ducklake
+               * @description Optional Snowflake role
+               * @example ETL_ROLE
                */
-              metadata_schema?: string
+              role?: string | null
               /**
-               * @description Number of concurrent DuckDB connections.
-               * @example 4
+               * @description Snowflake target schema
+               * @example PUBLIC
                */
-              pool_size?: number
+              schema: string
               /**
-               * @description S3-compatible storage access key ID
-               * @example my-access-key
+               * @description Snowflake user configured for key-pair authentication
+               * @example ETL_USER
                */
-              s3_access_key_id: string
-              /**
-               * @description S3-compatible storage endpoint
-               * @example 127.0.0.1:5000/s3
-               */
-              s3_endpoint: string
-              /**
-               * @description S3-compatible storage region
-               * @example us-east-1
-               */
-              s3_region: string
-              /**
-               * @description S3-compatible storage secret access key
-               * @example my-secret-key
-               */
-              s3_secret_access_key: string
-              /**
-               * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
-               * @example path
-               * @enum {string}
-               */
-              s3_url_style?: 'path' | 'vhost'
-              /**
-               * @description Whether to use SSL for S3-compatible storage
-               * @default true
-               * @example false
-               */
-              s3_use_ssl?: boolean
+              user: string
             }
           }
       /**
@@ -5998,29 +6501,111 @@ export interface components {
       destination_name: string
       /** @description Pipeline configuration */
       pipeline_config: {
-        /** @description Batch configuration */
+        /** @description Batch configuration. Omit or use `null` for server defaults. */
         batch?: {
+          /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
           /**
            * @description Maximum fill time in milliseconds
            * @example 200
            */
           max_fill_ms?: number
-        }
+          /**
+           * @description Ratio of process memory reserved for incoming stream batch bytes, in (0, 1]
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
+        } | null
         /**
-         * @description Behavior when the replication slot is invalidated
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
          * @example error
-         * @enum {string}
+         * @enum {string|null}
          */
-        invalidated_slot_behavior?: 'error' | 'recreate'
+        invalidated_slot_behavior?: 'error' | 'recreate' | null
+        /**
+         * @description Replicator log level
+         * @example info
+         * @enum {string|null}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn' | null
         /** @description Maximum number of copy connections per table */
-        max_copy_connections_per_table?: number
+        max_copy_connections_per_table?: number | null
         /** @description Maximum number of table sync workers */
-        max_table_sync_workers?: number
+        max_table_sync_workers?: number | null
+        /** @description Memory-based backpressure configuration. Omission enables server defaults; `null` disables it. */
+        memory_backpressure?: {
+          /**
+           * @description Memory usage ratio above which backpressure is activated
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Memory usage ratio below which backpressure is released
+           * @example 0.75
+           */
+          resume_threshold: number
+        } | null
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number | null
         /**
          * @description Publication name
          * @example pub_orders
          */
         publication_name: string
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number | null
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number | null
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number | null
+        /** @description Selection rules for tables participating in initial table copy. Omit or use `null` to copy all tables. */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
+          | (never | null)
       }
       /**
        * @description Source id
@@ -6031,29 +6616,111 @@ export interface components {
     CreateReplicationPipelineBody: {
       /** @description Pipeline configuration */
       config: {
-        /** @description Batch configuration */
+        /** @description Batch configuration. Omit or use `null` for server defaults. */
         batch?: {
+          /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
           /**
            * @description Maximum fill time in milliseconds
            * @example 200
            */
           max_fill_ms?: number
-        }
+          /**
+           * @description Ratio of process memory reserved for incoming stream batch bytes, in (0, 1]
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
+        } | null
         /**
-         * @description Behavior when the replication slot is invalidated
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
          * @example error
-         * @enum {string}
+         * @enum {string|null}
          */
-        invalidated_slot_behavior?: 'error' | 'recreate'
+        invalidated_slot_behavior?: 'error' | 'recreate' | null
+        /**
+         * @description Replicator log level
+         * @example info
+         * @enum {string|null}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn' | null
         /** @description Maximum number of copy connections per table */
-        max_copy_connections_per_table?: number
+        max_copy_connections_per_table?: number | null
         /** @description Maximum number of table sync workers */
-        max_table_sync_workers?: number
+        max_table_sync_workers?: number | null
+        /** @description Memory-based backpressure configuration. Omission enables server defaults; `null` disables it. */
+        memory_backpressure?: {
+          /**
+           * @description Memory usage ratio above which backpressure is activated
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Memory usage ratio below which backpressure is released
+           * @example 0.75
+           */
+          resume_threshold: number
+        } | null
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number | null
         /**
          * @description Publication name
          * @example pub_orders
          */
         publication_name: string
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number | null
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number | null
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number | null
+        /** @description Selection rules for tables participating in initial table copy. Omit or use `null` to copy all tables. */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
+          | (never | null)
       }
       /**
        * @description Destination id
@@ -6662,6 +7329,10 @@ export interface components {
       scope?: string
       token_endpoint_auth_method?: string
     }
+    EscalateConversationBody: {
+      chatId: string
+      conversationId: string
+    }
     GetArchiveResponse: {
       archive_empty: boolean
       file_url: string
@@ -6747,6 +7418,7 @@ export interface components {
       expires_at: string
       icon?: string
       name: string
+      redirect_uri: string
       /** @enum {string} */
       registration_type: 'manual' | 'dynamic'
       scopes?: (
@@ -7151,6 +7823,7 @@ export interface components {
             | 'auth_mfa_phone'
             | 'auth_mfa_web_authn'
             | 'log_drain'
+            | 'etl_pipeline'
           variant: {
             /** @enum {string} */
             identifier:
@@ -7180,6 +7853,7 @@ export interface components {
               | 'auth_mfa_phone_default'
               | 'auth_mfa_web_authn_default'
               | 'log_drain_default'
+              | 'etl_pipeline_default'
             /** @description Any JSON-serializable value */
             meta?: unknown
             name: string
@@ -8362,6 +9036,7 @@ export interface components {
           | 'PITR_28'
           | 'IPV4'
           | 'LOG_DRAIN'
+          | 'ETL_PIPELINE'
           | 'LOG_INGESTION'
           | 'LOG_QUERYING'
           | 'LOG_STORAGE'
@@ -8426,6 +9101,7 @@ export interface components {
           | 'PITR_28'
           | 'IPV4'
           | 'LOG_DRAIN'
+          | 'ETL_PIPELINE'
           | 'LOG_INGESTION'
           | 'LOG_QUERYING'
           | 'LOG_STORAGE'
@@ -9046,6 +9722,7 @@ export interface components {
           | 'auth_mfa_phone'
           | 'auth_mfa_web_authn'
           | 'log_drain'
+          | 'etl_pipeline'
         variants: {
           /** @enum {string} */
           identifier:
@@ -9075,6 +9752,7 @@ export interface components {
             | 'auth_mfa_phone_default'
             | 'auth_mfa_web_authn_default'
             | 'log_drain_default'
+            | 'etl_pipeline_default'
           /** @description Any JSON-serializable value */
           meta?: unknown
           name: string
@@ -9097,6 +9775,7 @@ export interface components {
           | 'auth_mfa_phone'
           | 'auth_mfa_web_authn'
           | 'log_drain'
+          | 'etl_pipeline'
         variant: {
           /** @enum {string} */
           identifier:
@@ -9126,6 +9805,7 @@ export interface components {
             | 'auth_mfa_phone_default'
             | 'auth_mfa_web_authn_default'
             | 'log_drain_default'
+            | 'etl_pipeline_default'
           /** @description Any JSON-serializable value */
           meta?: unknown
           name: string
@@ -9200,6 +9880,7 @@ export interface components {
       inserted_at: string
       integration_source: string | null
       is_branch_enabled: boolean
+      is_hibernating?: boolean
       is_physical_backups_enabled: boolean
       lastDatabaseResizeAt?: string
       maxDatabasePreprovisionGb?: number
@@ -9303,6 +9984,10 @@ export interface components {
       }[]
       ssl_enforced: boolean
       status: string
+    }
+    ProjectWakeResponse: {
+      connection_string: string | null
+      connection_string_read_only: string | null
     }
     PublicUrlResponse: {
       publicUrl: string
@@ -9435,7 +10120,7 @@ export interface components {
                * @description Number of concurrent BigQuery Storage Write API connections.
                * @example 8
                */
-              connection_pool_size?: number
+              connection_pool_size: number
               /**
                * @description BigQuery dataset id
                * @example analytics
@@ -9451,66 +10136,93 @@ export interface components {
                * @example my-gcp-project
                */
               project_id: string
-              /** @description BigQuery service account key */
-              service_account_key: string
             }
           }
         | {
-            iceberg: {
-              supabase: {
-                /**
-                 * @description Catalog token
-                 * @example A jwt secret
-                 */
-                catalog_token: string
-                /**
-                 * @description Namespace
-                 * @example my-namespace
-                 */
-                namespace?: string
-                /**
-                 * @description Project ref
-                 * @example abcdefghijklmnopqrst
-                 */
-                project_ref: string
-                /**
-                 * @description S3 access key ID
-                 * @example 53383b1d0cdb16a3afa63152656aa3cc
-                 */
-                s3_access_key_id: string
-                /**
-                 * @description S3 region
-                 * @example ap-southeast-1
-                 */
-                s3_region: string
-                /**
-                 * @description S3 secret access key
-                 * @example 25a0c5e69d847088a3e6ffb901adf4d19bbf74a400dec2ee49f46401039b3258
-                 */
-                s3_secret_access_key: string
-                /**
-                 * @description Warehouse name
-                 * @example my-warehouse
-                 */
-                warehouse_name: string
-              }
+            clickhouse: {
+              /**
+               * @description ClickHouse target database
+               * @example analytics
+               */
+              database: string
+              /**
+               * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+               * @example replacing_merge_tree
+               * @enum {string}
+               */
+              engine: 'merge_tree' | 'replacing_merge_tree'
+              /**
+               * @description Persisted ClickHouse HTTP(S) endpoint URL
+               * @example http://clickhouse.example.com:8123
+               */
+              url: string
+              /**
+               * @description ClickHouse user name
+               * @example default
+               */
+              user: string
             }
+          }
+        | {
+            iceberg:
+              | {
+                  supabase: {
+                    /**
+                     * @description Namespace
+                     * @example my-namespace
+                     */
+                    namespace?: string
+                    /**
+                     * @description Project ref
+                     * @example abcdefghijklmnopqrst
+                     */
+                    project_ref: string
+                    /**
+                     * @description S3 region
+                     * @example ap-southeast-1
+                     */
+                    s3_region: string
+                    /**
+                     * @description Warehouse name
+                     * @example my-warehouse
+                     */
+                    warehouse_name: string
+                  }
+                }
+              | {
+                  rest: {
+                    /**
+                     * @description Iceberg REST catalog URI
+                     * @example https://catalog.example.com
+                     */
+                    catalog_uri: string
+                    /**
+                     * @description Namespace
+                     * @example my-namespace
+                     */
+                    namespace?: string
+                    /**
+                     * @description S3-compatible storage endpoint
+                     * @example https://s3.example.com
+                     */
+                    s3_endpoint: string
+                    /**
+                     * @description Warehouse name
+                     * @example my-warehouse
+                     */
+                    warehouse_name: string
+                  }
+                }
           }
         | {
             ducklake: {
               /**
-               * @description DuckLake catalog URL
-               * @example postgres://user:pass@localhost:5432/ducklake_catalog
-               */
-              catalog_url: string
-              /**
-               * @description DuckLake data path
+               * @description Persisted DuckLake data path
                * @example s3://<bucket-name>/
                */
               data_path: string
               /**
-               * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-               * @default ducklake
+               * @description Persisted DuckLake metadata schema
                * @example ducklake
                */
               metadata_schema?: string
@@ -9518,39 +10230,56 @@ export interface components {
                * @description Number of concurrent DuckDB connections.
                * @example 4
                */
-              pool_size?: number
+              pool_size: number
               /**
-               * @description S3-compatible storage access key ID
-               * @example my-access-key
-               */
-              s3_access_key_id: string
-              /**
-               * @description S3-compatible storage endpoint
+               * @description Persisted S3-compatible storage endpoint
                * @example 127.0.0.1:5000/s3
                */
-              s3_endpoint: string
+              s3_endpoint?: string
               /**
                * @description S3-compatible storage region
                * @example us-east-1
                */
-              s3_region: string
+              s3_region?: string
               /**
-               * @description S3-compatible storage secret access key
-               * @example my-secret-key
-               */
-              s3_secret_access_key: string
-              /**
-               * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+               * @description Persisted S3 URL style
                * @example path
-               * @enum {string}
                */
-              s3_url_style?: 'path' | 'vhost'
+              s3_url_style?: string
               /**
                * @description Whether to use SSL for S3-compatible storage
-               * @default true
                * @example false
                */
               s3_use_ssl?: boolean
+            }
+          }
+        | {
+            snowflake: {
+              /**
+               * @description Snowflake account identifier
+               * @example MYORG-MYACCOUNT
+               */
+              account_id: string
+              /**
+               * @description Snowflake target database
+               * @example ANALYTICS
+               */
+              database: string
+              /**
+               * @description Optional Snowflake role
+               * @example ETL_ROLE
+               */
+              role?: string
+              /**
+               * @description Snowflake target schema
+               * @example PUBLIC
+               */
+              schema: string
+              /**
+               * @description Snowflake user configured for key-pair authentication
+               * @example ETL_USER
+               */
+              user: string
             }
           }
       /**
@@ -9580,7 +10309,7 @@ export interface components {
                  * @description Number of concurrent BigQuery Storage Write API connections.
                  * @example 8
                  */
-                connection_pool_size?: number
+                connection_pool_size: number
                 /**
                  * @description BigQuery dataset id
                  * @example analytics
@@ -9596,66 +10325,93 @@ export interface components {
                  * @example my-gcp-project
                  */
                 project_id: string
-                /** @description BigQuery service account key */
-                service_account_key: string
               }
             }
           | {
-              iceberg: {
-                supabase: {
-                  /**
-                   * @description Catalog token
-                   * @example A jwt secret
-                   */
-                  catalog_token: string
-                  /**
-                   * @description Namespace
-                   * @example my-namespace
-                   */
-                  namespace?: string
-                  /**
-                   * @description Project ref
-                   * @example abcdefghijklmnopqrst
-                   */
-                  project_ref: string
-                  /**
-                   * @description S3 access key ID
-                   * @example 53383b1d0cdb16a3afa63152656aa3cc
-                   */
-                  s3_access_key_id: string
-                  /**
-                   * @description S3 region
-                   * @example ap-southeast-1
-                   */
-                  s3_region: string
-                  /**
-                   * @description S3 secret access key
-                   * @example 25a0c5e69d847088a3e6ffb901adf4d19bbf74a400dec2ee49f46401039b3258
-                   */
-                  s3_secret_access_key: string
-                  /**
-                   * @description Warehouse name
-                   * @example my-warehouse
-                   */
-                  warehouse_name: string
-                }
+              clickhouse: {
+                /**
+                 * @description ClickHouse target database
+                 * @example analytics
+                 */
+                database: string
+                /**
+                 * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+                 * @example replacing_merge_tree
+                 * @enum {string}
+                 */
+                engine: 'merge_tree' | 'replacing_merge_tree'
+                /**
+                 * @description Persisted ClickHouse HTTP(S) endpoint URL
+                 * @example http://clickhouse.example.com:8123
+                 */
+                url: string
+                /**
+                 * @description ClickHouse user name
+                 * @example default
+                 */
+                user: string
               }
+            }
+          | {
+              iceberg:
+                | {
+                    supabase: {
+                      /**
+                       * @description Namespace
+                       * @example my-namespace
+                       */
+                      namespace?: string
+                      /**
+                       * @description Project ref
+                       * @example abcdefghijklmnopqrst
+                       */
+                      project_ref: string
+                      /**
+                       * @description S3 region
+                       * @example ap-southeast-1
+                       */
+                      s3_region: string
+                      /**
+                       * @description Warehouse name
+                       * @example my-warehouse
+                       */
+                      warehouse_name: string
+                    }
+                  }
+                | {
+                    rest: {
+                      /**
+                       * @description Iceberg REST catalog URI
+                       * @example https://catalog.example.com
+                       */
+                      catalog_uri: string
+                      /**
+                       * @description Namespace
+                       * @example my-namespace
+                       */
+                      namespace?: string
+                      /**
+                       * @description S3-compatible storage endpoint
+                       * @example https://s3.example.com
+                       */
+                      s3_endpoint: string
+                      /**
+                       * @description Warehouse name
+                       * @example my-warehouse
+                       */
+                      warehouse_name: string
+                    }
+                  }
             }
           | {
               ducklake: {
                 /**
-                 * @description DuckLake catalog URL
-                 * @example postgres://user:pass@localhost:5432/ducklake_catalog
-                 */
-                catalog_url: string
-                /**
-                 * @description DuckLake data path
+                 * @description Persisted DuckLake data path
                  * @example s3://<bucket-name>/
                  */
                 data_path: string
                 /**
-                 * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-                 * @default ducklake
+                 * @description Persisted DuckLake metadata schema
                  * @example ducklake
                  */
                 metadata_schema?: string
@@ -9663,39 +10419,56 @@ export interface components {
                  * @description Number of concurrent DuckDB connections.
                  * @example 4
                  */
-                pool_size?: number
+                pool_size: number
                 /**
-                 * @description S3-compatible storage access key ID
-                 * @example my-access-key
-                 */
-                s3_access_key_id: string
-                /**
-                 * @description S3-compatible storage endpoint
+                 * @description Persisted S3-compatible storage endpoint
                  * @example 127.0.0.1:5000/s3
                  */
-                s3_endpoint: string
+                s3_endpoint?: string
                 /**
                  * @description S3-compatible storage region
                  * @example us-east-1
                  */
-                s3_region: string
+                s3_region?: string
                 /**
-                 * @description S3-compatible storage secret access key
-                 * @example my-secret-key
-                 */
-                s3_secret_access_key: string
-                /**
-                 * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                 * @description Persisted S3 URL style
                  * @example path
-                 * @enum {string}
                  */
-                s3_url_style?: 'path' | 'vhost'
+                s3_url_style?: string
                 /**
                  * @description Whether to use SSL for S3-compatible storage
-                 * @default true
                  * @example false
                  */
                 s3_use_ssl?: boolean
+              }
+            }
+          | {
+              snowflake: {
+                /**
+                 * @description Snowflake account identifier
+                 * @example MYORG-MYACCOUNT
+                 */
+                account_id: string
+                /**
+                 * @description Snowflake target database
+                 * @example ANALYTICS
+                 */
+                database: string
+                /**
+                 * @description Optional Snowflake role
+                 * @example ETL_ROLE
+                 */
+                role?: string
+                /**
+                 * @description Snowflake target schema
+                 * @example PUBLIC
+                 */
+                schema: string
+                /**
+                 * @description Snowflake user configured for key-pair authentication
+                 * @example ETL_USER
+                 */
+                user: string
               }
             }
         /**
@@ -9719,6 +10492,11 @@ export interface components {
       /** @description Stats about apply worker lag */
       apply_lag?: {
         /**
+         * @description Whether the slot currently has an active replication connection.
+         * @example true
+         */
+        active: boolean
+        /**
          * @description Bytes between the current WAL location and the confirmed flush LSN.
          * @example 2048
          */
@@ -9729,15 +10507,26 @@ export interface components {
          */
         flush_lag?: number
         /**
+         * @description Milliseconds elapsed since the walsender last received client feedback. This can be present even when write and flush lag are unavailable.
+         * @example 5000
+         */
+        reply_time_lag?: number
+        /**
          * @description Bytes between the current WAL location and the slot restart LSN.
          * @example 1024
          */
         restart_lsn_bytes: number
         /**
-         * @description How many bytes of WAL are still safe to build up before the limit of the slot is reached.
+         * @description How many bytes of WAL are still safe to build up before the limit of the slot is reached. `null` means Postgres reports unlimited slot WAL retention.
          * @example 8192
          */
-        safe_wal_size_bytes: number
+        safe_wal_size_bytes: number | null
+        /**
+         * @description WAL availability status reported by Postgres for the slot.
+         * @example reserved
+         * @enum {string}
+         */
+        wal_status?: 'extended' | 'lost' | 'reserved' | 'unknown' | 'unreserved'
         /**
          * @description Write lag expressed in milliseconds.
          * @example 1500
@@ -9751,6 +10540,21 @@ export interface components {
       pipeline_id: number
       /** @description Table statuses */
       table_statuses: {
+        /**
+         * @description Table id (Postgres OID)
+         * @example 16408
+         */
+        id: number
+        /**
+         * @description Table name
+         * @example orders
+         */
+        name: string
+        /**
+         * @description Table schema
+         * @example public
+         */
+        schema: string
         /** @description Table replication state */
         state:
           | {
@@ -9794,17 +10598,24 @@ export interface components {
               solution?: string
             }
         /**
-         * @description Table id (Postgres OID)
+         * @deprecated
+         * @description Deprecated compatibility alias for `id`.
          * @example 16408
          */
         table_id: number
         /**
-         * @description Table name
+         * @deprecated
+         * @description Deprecated unquoted `schema.name` compatibility representation.
          * @example public.orders
          */
         table_name: string
         /** @description Stats about table sync worker lag */
         table_sync_lag?: {
+          /**
+           * @description Whether the slot currently has an active replication connection.
+           * @example true
+           */
+          active: boolean
           /**
            * @description Bytes between the current WAL location and the confirmed flush LSN.
            * @example 2048
@@ -9816,15 +10627,26 @@ export interface components {
            */
           flush_lag?: number
           /**
+           * @description Milliseconds elapsed since the walsender last received client feedback. This can be present even when write and flush lag are unavailable.
+           * @example 5000
+           */
+          reply_time_lag?: number
+          /**
            * @description Bytes between the current WAL location and the slot restart LSN.
            * @example 1024
            */
           restart_lsn_bytes: number
           /**
-           * @description How many bytes of WAL are still safe to build up before the limit of the slot is reached.
+           * @description How many bytes of WAL are still safe to build up before the limit of the slot is reached. `null` means Postgres reports unlimited slot WAL retention.
            * @example 8192
            */
-          safe_wal_size_bytes: number
+          safe_wal_size_bytes: number | null
+          /**
+           * @description WAL availability status reported by Postgres for the slot.
+           * @example reserved
+           * @enum {string}
+           */
+          wal_status?: 'extended' | 'lost' | 'reserved' | 'unknown' | 'unreserved'
           /**
            * @description Write lag expressed in milliseconds.
            * @example 1500
@@ -9840,26 +10662,107 @@ export interface components {
         /** @description Batch configuration */
         batch?: {
           /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
+          /**
            * @description Maximum fill time in milliseconds
            * @example 200
            */
           max_fill_ms?: number
+          /**
+           * @description Persisted ratio of process memory reserved for incoming stream batch bytes
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
         }
         /**
-         * @description Behavior when the replication slot is invalidated
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
          * @example error
          * @enum {string}
          */
         invalidated_slot_behavior?: 'error' | 'recreate'
+        /**
+         * @description Replicator log level
+         * @example info
+         * @enum {string}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn'
         /** @description Maximum number of copy connections per table */
         max_copy_connections_per_table?: number
         /** @description Maximum number of table sync workers */
         max_table_sync_workers?: number
+        /** @description Memory-based backpressure configuration */
+        memory_backpressure?: {
+          /**
+           * @description Persisted memory usage ratio that activates backpressure
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Persisted memory usage ratio that releases backpressure
+           * @example 0.75
+           */
+          resume_threshold: number
+        }
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number
         /**
          * @description Publication name
          * @example pub_orders
          */
         publication_name: string
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number
+        /** @description Selection rules for tables participating in initial table copy */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
       }
       /**
        * @description Destination id
@@ -9905,26 +10808,107 @@ export interface components {
           /** @description Batch configuration */
           batch?: {
             /**
+             * @description Maximum preferred byte size for one source batch
+             * @example 8388608
+             */
+            max_bytes?: number
+            /**
              * @description Maximum fill time in milliseconds
              * @example 200
              */
             max_fill_ms?: number
+            /**
+             * @description Persisted ratio of process memory reserved for incoming stream batch bytes
+             * @example 0.2
+             */
+            memory_budget_ratio?: number
           }
           /**
-           * @description Behavior when the replication slot is invalidated
+           * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
            * @example error
            * @enum {string}
            */
           invalidated_slot_behavior?: 'error' | 'recreate'
+          /**
+           * @description Replicator log level
+           * @example info
+           * @enum {string}
+           */
+          log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn'
           /** @description Maximum number of copy connections per table */
           max_copy_connections_per_table?: number
           /** @description Maximum number of table sync workers */
           max_table_sync_workers?: number
+          /** @description Memory-based backpressure configuration */
+          memory_backpressure?: {
+            /**
+             * @description Persisted memory usage ratio that activates backpressure
+             * @example 0.85
+             */
+            activate_threshold: number
+            /**
+             * @description Persisted memory usage ratio that releases backpressure
+             * @example 0.75
+             */
+            resume_threshold: number
+          }
+          /**
+           * @description Milliseconds between one memory usage refresh and another
+           * @example 100
+           */
+          memory_refresh_interval_ms?: number
           /**
            * @description Publication name
            * @example pub_orders
            */
           publication_name: string
+          /**
+           * @description Milliseconds between one replication lag refresh and another
+           * @example 10000
+           */
+          replication_lag_refresh_interval_ms?: number
+          /**
+           * @description Milliseconds between one retry and another for timed worker retries
+           * @example 10000
+           */
+          table_error_retry_delay_ms?: number
+          /**
+           * @description Maximum number of automatic timed retry attempts
+           * @example 5
+           */
+          table_error_retry_max_attempts?: number
+          /** @description Selection rules for tables participating in initial table copy */
+          table_sync_copy?:
+            | {
+                /** @enum {string} */
+                type: 'include_all_tables'
+              }
+            | {
+                /** @enum {string} */
+                type: 'skip_all_tables'
+              }
+            | {
+                /**
+                 * @description Table ids for which copy should be performed
+                 * @example [
+                 *       16408
+                 *     ]
+                 */
+                table_ids: number[]
+                /** @enum {string} */
+                type: 'include_tables'
+              }
+            | {
+                /**
+                 * @description Table ids for which copy should be skipped
+                 * @example [
+                 *       16408
+                 *     ]
+                 */
+                table_ids: number[]
+                /** @enum {string} */
+                type: 'skip_tables'
+              }
         }
         /**
          * @description Destination id
@@ -10011,6 +10995,81 @@ export interface components {
         name: string
       }
     }
+    CostEstimateResponse: {
+      /**
+       * @description Currency of all amounts
+       * @example usd
+       * @enum {string}
+       */
+      currency: 'usd'
+      /** @description Recurring per-pipeline cost */
+      pipeline: {
+        /**
+         * @description Hourly rate charged per active pipeline
+         * @example 0.053
+         */
+        hourly_cost: number
+        /**
+         * @description Projected monthly cost for an active pipeline, based on an average 730-hour month. Pipelines are billed hourly, so this is an estimate, not a metered amount.
+         * @example 38.69
+         */
+        monthly_cost: number
+      }
+      /** @description Usage-based streaming cost, expressed as a rate */
+      streaming: {
+        /**
+         * @description Usage-based streaming rate per GB. Actual cost depends on the change volume.
+         * @example 3
+         */
+        rate_per_gb: number
+      }
+      /** @description One-time cost for the initial table copy */
+      table_copy: {
+        /**
+         * @description One-time initial-copy rate per GB
+         * @example 0.6
+         */
+        rate_per_gb: number
+        /** @description Per-table initial-copy cost estimate */
+        tables: {
+          /**
+           * @description Estimated on-disk size of the table in bytes
+           * @example 10960896
+           */
+          estimated_bytes: number
+          /**
+           * @description Estimated one-time initial-copy cost for the table, in the response currency
+           * @example 0.01
+           */
+          estimated_cost: number
+          /**
+           * @description Whether this table has a row filter. The estimate does not account for how many rows the filter excludes, so the actual replicated volume may be lower than shown.
+           * @example false
+           */
+          is_row_filtered: boolean
+          /**
+           * @description Table name
+           * @example orders
+           */
+          name: string
+          /**
+           * @description Table schema
+           * @example public
+           */
+          schema: string
+        }[]
+        /**
+         * @description Total estimated bytes across all tables
+         * @example 11911168
+         */
+        total_bytes: number
+        /**
+         * @description Total estimated one-time initial-copy cost
+         * @example 0.01
+         */
+        total_cost: number
+      }
+    }
     ReplicationPublicationsResponse: {
       /** @description List of publications */
       publications: {
@@ -10021,6 +11080,11 @@ export interface components {
         name: string
         /** @description Publication tables */
         tables: {
+          /**
+           * @description Table id (Postgres OID)
+           * @example 16408
+           */
+          id: number
           /**
            * @description Table name
            * @example orders
@@ -10081,6 +11145,11 @@ export interface components {
       /** @description List of tables */
       tables: {
         /**
+         * @description Table id (Postgres OID)
+         * @example 16408
+         */
+        id: number
+        /**
          * @description Table name
          * @example orders
          */
@@ -10108,6 +11177,12 @@ export interface components {
     }
     ResizeBody: {
       volume_size_gb: number
+    }
+    ResolveConversationBody: {
+      /** @enum {string} */
+      aiSupportStatus: 'user_resolved' | 'bot_resolved'
+      chatId: string
+      conversationId: string
     }
     RestartProjectBody: {
       database_identifier?: string
@@ -10325,10 +11400,12 @@ export interface components {
       siteUrl?: string
       subject?: string
       tags: string[]
+      threadRef?: string
       urlToAirTable?: string
       verified?: boolean
     }
     SendFeedbackResponse: {
+      conversationId?: string
       result: string
     }
     SendUpgradeSurveyBody: {
@@ -10517,6 +11594,32 @@ export interface components {
       max_client_conn: number | null
       /** @enum {string} */
       pool_mode: 'transaction' | 'session'
+    }
+    SyncConversationMessagesBody: {
+      affectedServices?: string
+      allowSupportAccess?: boolean
+      browserInformation?: string
+      category?: string
+      chatId: string
+      conversationId?: string
+      /** @default false */
+      isInitial?: boolean
+      library?: string
+      messages: {
+        content: string
+        id: string
+        /** @enum {string} */
+        role: 'user' | 'assistant'
+      }[]
+      organizationSlug?: string
+      projectRef?: string
+      severity?: string
+      subject: string
+    }
+    SyncConversationMessagesResponse: {
+      conversationId?: string
+      /** @enum {string} */
+      result: 'success'
     }
     TaxIdResponse: {
       tax_id: {
@@ -10727,6 +11830,7 @@ export interface components {
           | 'PITR_28'
           | 'IPV4'
           | 'LOG_DRAIN'
+          | 'ETL_PIPELINE'
           | 'LOG_INGESTION'
           | 'LOG_QUERYING'
           | 'LOG_STORAGE'
@@ -10754,6 +11858,7 @@ export interface components {
         | 'auth_mfa_phone'
         | 'auth_mfa_web_authn'
         | 'log_drain'
+        | 'etl_pipeline'
       /** @enum {string} */
       addon_variant:
         | 'ci_micro'
@@ -10782,6 +11887,7 @@ export interface components {
         | 'auth_mfa_phone_default'
         | 'auth_mfa_web_authn_default'
         | 'log_drain_default'
+        | 'etl_pipeline_default'
     }
     UpdateBackendParamsOpenapi: {
       config?:
@@ -10866,6 +11972,13 @@ export interface components {
       project_ref?: string
     }
     UpdateConversationCustomFieldsResponse: {
+      /** @enum {string} */
+      result: 'success'
+    }
+    UpdateConversationLifecycleResponse: {
+      /** @enum {string} */
+      aiSupportStatus: 'bot_active' | 'escalated' | 'user_resolved' | 'bot_resolved'
+      conversationId: string
       /** @enum {string} */
       result: 'success'
     }
@@ -11416,24 +12529,51 @@ export interface components {
                * @description Number of concurrent BigQuery Storage Write API connections.
                * @example 8
                */
-              connection_pool_size?: number
+              connection_pool_size?: number | null
               /**
                * @description BigQuery dataset id
                * @example analytics
                */
-              dataset_id: string
+              dataset_id?: string | null
               /**
                * @description Maximum data staleness in minutes
                * @example 5
                */
-              max_staleness_mins?: number
+              max_staleness_mins?: number | null
               /**
                * @description BigQuery project id
                * @example my-gcp-project
                */
-              project_id: string
+              project_id?: string | null
               /** @description BigQuery service account key */
-              service_account_key: string
+              service_account_key?: string | null
+            }
+          }
+        | {
+            clickhouse: {
+              /**
+               * @description ClickHouse target database
+               * @example analytics
+               */
+              database?: string | null
+              /**
+               * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+               * @example replacing_merge_tree
+               * @enum {string|null}
+               */
+              engine?: 'merge_tree' | 'replacing_merge_tree' | null
+              /** @description ClickHouse password. Omit for passwordless access. */
+              password?: string | null
+              /**
+               * @description ClickHouse HTTPS endpoint URL
+               * @example https://clickhouse.example.com:8443
+               */
+              url?: string | null
+              /**
+               * @description ClickHouse user name
+               * @example default
+               */
+              user?: string | null
             }
           }
         | {
@@ -11443,95 +12583,243 @@ export interface components {
                  * @description Catalog token
                  * @example A jwt secret
                  */
-                catalog_token: string
+                catalog_token?: string | null
                 /**
                  * @description Namespace
                  * @example my-namespace
                  */
-                namespace?: string
+                namespace?: string | null
                 /**
                  * @description Project ref
                  * @example abcdefghijklmnopqrst
                  */
-                project_ref: string
+                project_ref?: string | null
                 /**
                  * @description S3 access key ID
                  * @example 53383b1d0cdb16a3afa63152656aa3cc
                  */
-                s3_access_key_id: string
+                s3_access_key_id?: string | null
                 /**
                  * @description S3 region
                  * @example ap-southeast-1
                  */
-                s3_region: string
+                s3_region?: string | null
                 /**
                  * @description S3 secret access key
                  * @example 25a0c5e69d847088a3e6ffb901adf4d19bbf74a400dec2ee49f46401039b3258
                  */
-                s3_secret_access_key: string
+                s3_secret_access_key?: string | null
                 /**
                  * @description Warehouse name
                  * @example my-warehouse
                  */
-                warehouse_name: string
+                warehouse_name?: string | null
               }
             }
           }
         | {
-            ducklake: {
+            ducklake:
+              | {
+                  /**
+                   * @description DuckLake catalog URL
+                   * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                   */
+                  catalog_url?: string | null
+                  /**
+                   * @description DuckLake data path
+                   * @example s3://<bucket-name>/
+                   */
+                  data_path?: string | null
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @example ducklake
+                   */
+                  metadata_schema?: string | null
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  /**
+                   * @description S3-compatible storage access key ID
+                   * @example my-access-key
+                   */
+                  s3_access_key_id?: string | null
+                  /**
+                   * @description S3-compatible storage endpoint
+                   * @example 127.0.0.1:5000/s3
+                   */
+                  s3_endpoint?: string | null
+                  /**
+                   * @description S3-compatible storage region
+                   * @example us-east-1
+                   */
+                  s3_region?: string | null
+                  /**
+                   * @description S3-compatible storage secret access key
+                   * @example my-secret-key
+                   */
+                  s3_secret_access_key?: string | null
+                  /**
+                   * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                   * @example path
+                   * @enum {string|null}
+                   */
+                  s3_url_style?: 'path' | 'vhost' | null
+                  /**
+                   * @description Whether to use SSL for S3-compatible storage
+                   * @example false
+                   */
+                  s3_use_ssl?: boolean | null
+                }
+              | {
+                  catalog:
+                    | {
+                        /**
+                         * @description DuckLake catalog URL
+                         * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                         */
+                        catalog_url: string
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /** @enum {string} */
+                        type: 'postgres_url'
+                      }
+                    | {
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /**
+                         * @description Supabase project ref used as the DuckLake PostgreSQL catalog
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_project'
+                      }
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @example ducklake
+                   */
+                  metadata_schema?: string | null
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  storage:
+                    | {
+                        /**
+                         * @description DuckLake data path
+                         * @example s3://<bucket-name>/
+                         */
+                        data_path: string
+                        /**
+                         * @description S3-compatible storage access key ID
+                         * @example my-access-key
+                         */
+                        s3_access_key_id: string
+                        /**
+                         * @description S3-compatible storage endpoint
+                         * @example 127.0.0.1:5000/s3
+                         */
+                        s3_endpoint: string
+                        /**
+                         * @description S3-compatible storage region
+                         * @example us-east-1
+                         */
+                        s3_region: string
+                        /**
+                         * @description S3-compatible storage secret access key
+                         * @example my-secret-key
+                         */
+                        s3_secret_access_key: string
+                        /**
+                         * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                         * @example path
+                         * @enum {string|null}
+                         */
+                        s3_url_style?: 'path' | 'vhost' | null
+                        /**
+                         * @description Whether to use SSL for S3-compatible storage
+                         * @example false
+                         */
+                        s3_use_ssl?: boolean | null
+                        /** @enum {string} */
+                        type: 's3'
+                      }
+                    | {
+                        /**
+                         * @description Storage bucket id used for DuckLake data files
+                         * @example ducklake
+                         */
+                        bucket: string
+                        /**
+                         * @description Optional description for the generated Supabase Storage S3 credential
+                         * @example DuckLake replication destination
+                         */
+                        credential_description?: string
+                        /**
+                         * @description Optional path prefix inside the bucket for DuckLake data files
+                         * @example replication
+                         */
+                        path?: string
+                        /**
+                         * @description Supabase project ref whose Object Storage S3 API stores DuckLake data files
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_storage'
+                      }
+                }
+          }
+        | {
+            snowflake: {
               /**
-               * @description DuckLake catalog URL
-               * @example postgres://user:pass@localhost:5432/ducklake_catalog
+               * @description Snowflake account identifier
+               * @example MYORG-MYACCOUNT
                */
-              catalog_url: string
+              account_id?: string | null
               /**
-               * @description DuckLake data path
-               * @example s3://<bucket-name>/
+               * @description Snowflake target database
+               * @example ANALYTICS
                */
-              data_path: string
+              database?: string | null
+              /** @description Snowflake RSA private key PEM contents */
+              private_key?: string | null
+              /** @description Optional passphrase for encrypted private keys */
+              private_key_passphrase?: string | null
               /**
-               * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-               * @default ducklake
-               * @example ducklake
+               * @description Optional Snowflake role
+               * @example ETL_ROLE
                */
-              metadata_schema?: string
+              role?: string | null
               /**
-               * @description Number of concurrent DuckDB connections.
-               * @example 4
+               * @description Snowflake target schema
+               * @example PUBLIC
                */
-              pool_size?: number
+              schema?: string | null
               /**
-               * @description S3-compatible storage access key ID
-               * @example my-access-key
+               * @description Snowflake user configured for key-pair authentication
+               * @example ETL_USER
                */
-              s3_access_key_id: string
-              /**
-               * @description S3-compatible storage endpoint
-               * @example 127.0.0.1:5000/s3
-               */
-              s3_endpoint: string
-              /**
-               * @description S3-compatible storage region
-               * @example us-east-1
-               */
-              s3_region: string
-              /**
-               * @description S3-compatible storage secret access key
-               * @example my-secret-key
-               */
-              s3_secret_access_key: string
-              /**
-               * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
-               * @example path
-               * @enum {string}
-               */
-              s3_url_style?: 'path' | 'vhost'
-              /**
-               * @description Whether to use SSL for S3-compatible storage
-               * @default true
-               * @example false
-               */
-              s3_use_ssl?: boolean
+              user?: string | null
             }
           }
       /**
@@ -11549,24 +12837,51 @@ export interface components {
                * @description Number of concurrent BigQuery Storage Write API connections.
                * @example 8
                */
-              connection_pool_size?: number
+              connection_pool_size?: number | null
               /**
                * @description BigQuery dataset id
                * @example analytics
                */
-              dataset_id: string
+              dataset_id?: string | null
               /**
                * @description Maximum data staleness in minutes
                * @example 5
                */
-              max_staleness_mins?: number
+              max_staleness_mins?: number | null
               /**
                * @description BigQuery project id
                * @example my-gcp-project
                */
-              project_id: string
+              project_id?: string | null
               /** @description BigQuery service account key */
-              service_account_key: string
+              service_account_key?: string | null
+            }
+          }
+        | {
+            clickhouse: {
+              /**
+               * @description ClickHouse target database
+               * @example analytics
+               */
+              database?: string | null
+              /**
+               * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+               * @example replacing_merge_tree
+               * @enum {string|null}
+               */
+              engine?: 'merge_tree' | 'replacing_merge_tree' | null
+              /** @description ClickHouse password. Omit for passwordless access. */
+              password?: string | null
+              /**
+               * @description ClickHouse HTTPS endpoint URL
+               * @example https://clickhouse.example.com:8443
+               */
+              url?: string | null
+              /**
+               * @description ClickHouse user name
+               * @example default
+               */
+              user?: string | null
             }
           }
         | {
@@ -11576,95 +12891,243 @@ export interface components {
                  * @description Catalog token
                  * @example A jwt secret
                  */
-                catalog_token: string
+                catalog_token?: string | null
                 /**
                  * @description Namespace
                  * @example my-namespace
                  */
-                namespace?: string
+                namespace?: string | null
                 /**
                  * @description Project ref
                  * @example abcdefghijklmnopqrst
                  */
-                project_ref: string
+                project_ref?: string | null
                 /**
                  * @description S3 access key ID
                  * @example 53383b1d0cdb16a3afa63152656aa3cc
                  */
-                s3_access_key_id: string
+                s3_access_key_id?: string | null
                 /**
                  * @description S3 region
                  * @example ap-southeast-1
                  */
-                s3_region: string
+                s3_region?: string | null
                 /**
                  * @description S3 secret access key
                  * @example 25a0c5e69d847088a3e6ffb901adf4d19bbf74a400dec2ee49f46401039b3258
                  */
-                s3_secret_access_key: string
+                s3_secret_access_key?: string | null
                 /**
                  * @description Warehouse name
                  * @example my-warehouse
                  */
-                warehouse_name: string
+                warehouse_name?: string | null
               }
             }
           }
         | {
-            ducklake: {
+            ducklake:
+              | {
+                  /**
+                   * @description DuckLake catalog URL
+                   * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                   */
+                  catalog_url?: string | null
+                  /**
+                   * @description DuckLake data path
+                   * @example s3://<bucket-name>/
+                   */
+                  data_path?: string | null
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @example ducklake
+                   */
+                  metadata_schema?: string | null
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  /**
+                   * @description S3-compatible storage access key ID
+                   * @example my-access-key
+                   */
+                  s3_access_key_id?: string | null
+                  /**
+                   * @description S3-compatible storage endpoint
+                   * @example 127.0.0.1:5000/s3
+                   */
+                  s3_endpoint?: string | null
+                  /**
+                   * @description S3-compatible storage region
+                   * @example us-east-1
+                   */
+                  s3_region?: string | null
+                  /**
+                   * @description S3-compatible storage secret access key
+                   * @example my-secret-key
+                   */
+                  s3_secret_access_key?: string | null
+                  /**
+                   * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                   * @example path
+                   * @enum {string|null}
+                   */
+                  s3_url_style?: 'path' | 'vhost' | null
+                  /**
+                   * @description Whether to use SSL for S3-compatible storage
+                   * @example false
+                   */
+                  s3_use_ssl?: boolean | null
+                }
+              | {
+                  catalog:
+                    | {
+                        /**
+                         * @description DuckLake catalog URL
+                         * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                         */
+                        catalog_url: string
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /** @enum {string} */
+                        type: 'postgres_url'
+                      }
+                    | {
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /**
+                         * @description Supabase project ref used as the DuckLake PostgreSQL catalog
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_project'
+                      }
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @example ducklake
+                   */
+                  metadata_schema?: string | null
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  storage:
+                    | {
+                        /**
+                         * @description DuckLake data path
+                         * @example s3://<bucket-name>/
+                         */
+                        data_path: string
+                        /**
+                         * @description S3-compatible storage access key ID
+                         * @example my-access-key
+                         */
+                        s3_access_key_id: string
+                        /**
+                         * @description S3-compatible storage endpoint
+                         * @example 127.0.0.1:5000/s3
+                         */
+                        s3_endpoint: string
+                        /**
+                         * @description S3-compatible storage region
+                         * @example us-east-1
+                         */
+                        s3_region: string
+                        /**
+                         * @description S3-compatible storage secret access key
+                         * @example my-secret-key
+                         */
+                        s3_secret_access_key: string
+                        /**
+                         * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                         * @example path
+                         * @enum {string|null}
+                         */
+                        s3_url_style?: 'path' | 'vhost' | null
+                        /**
+                         * @description Whether to use SSL for S3-compatible storage
+                         * @example false
+                         */
+                        s3_use_ssl?: boolean | null
+                        /** @enum {string} */
+                        type: 's3'
+                      }
+                    | {
+                        /**
+                         * @description Storage bucket id used for DuckLake data files
+                         * @example ducklake
+                         */
+                        bucket: string
+                        /**
+                         * @description Optional description for the generated Supabase Storage S3 credential
+                         * @example DuckLake replication destination
+                         */
+                        credential_description?: string
+                        /**
+                         * @description Optional path prefix inside the bucket for DuckLake data files
+                         * @example replication
+                         */
+                        path?: string
+                        /**
+                         * @description Supabase project ref whose Object Storage S3 API stores DuckLake data files
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_storage'
+                      }
+                }
+          }
+        | {
+            snowflake: {
               /**
-               * @description DuckLake catalog URL
-               * @example postgres://user:pass@localhost:5432/ducklake_catalog
+               * @description Snowflake account identifier
+               * @example MYORG-MYACCOUNT
                */
-              catalog_url: string
+              account_id?: string | null
               /**
-               * @description DuckLake data path
-               * @example s3://<bucket-name>/
+               * @description Snowflake target database
+               * @example ANALYTICS
                */
-              data_path: string
+              database?: string | null
+              /** @description Snowflake RSA private key PEM contents */
+              private_key?: string | null
+              /** @description Optional passphrase for encrypted private keys */
+              private_key_passphrase?: string | null
               /**
-               * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-               * @default ducklake
-               * @example ducklake
+               * @description Optional Snowflake role
+               * @example ETL_ROLE
                */
-              metadata_schema?: string
+              role?: string | null
               /**
-               * @description Number of concurrent DuckDB connections.
-               * @example 4
+               * @description Snowflake target schema
+               * @example PUBLIC
                */
-              pool_size?: number
+              schema?: string | null
               /**
-               * @description S3-compatible storage access key ID
-               * @example my-access-key
+               * @description Snowflake user configured for key-pair authentication
+               * @example ETL_USER
                */
-              s3_access_key_id: string
-              /**
-               * @description S3-compatible storage endpoint
-               * @example 127.0.0.1:5000/s3
-               */
-              s3_endpoint: string
-              /**
-               * @description S3-compatible storage region
-               * @example us-east-1
-               */
-              s3_region: string
-              /**
-               * @description S3-compatible storage secret access key
-               * @example my-secret-key
-               */
-              s3_secret_access_key: string
-              /**
-               * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
-               * @example path
-               * @enum {string}
-               */
-              s3_url_style?: 'path' | 'vhost'
-              /**
-               * @description Whether to use SSL for S3-compatible storage
-               * @default true
-               * @example false
-               */
-              s3_use_ssl?: boolean
+              user?: string | null
             }
           }
       /**
@@ -11672,31 +13135,113 @@ export interface components {
        * @example bq-analytics
        */
       destination_name: string
-      /** @description Pipeline configuration */
+      /** @description Pipeline configuration patch */
       pipeline_config: {
-        /** @description Batch configuration */
+        /** @description Complete batch configuration replacement. Omission preserves it; `null` resets server defaults. */
         batch?: {
+          /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
           /**
            * @description Maximum fill time in milliseconds
            * @example 200
            */
           max_fill_ms?: number
-        }
+          /**
+           * @description Ratio of process memory reserved for incoming stream batch bytes, in (0, 1]
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
+        } | null
         /**
-         * @description Behavior when the replication slot is invalidated
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
          * @example error
-         * @enum {string}
+         * @enum {string|null}
          */
-        invalidated_slot_behavior?: 'error' | 'recreate'
-        /** @description Maximum number of copy connections per table */
-        max_copy_connections_per_table?: number
-        /** @description Maximum number of table sync workers */
-        max_table_sync_workers?: number
+        invalidated_slot_behavior?: 'error' | 'recreate' | null
         /**
-         * @description Publication name
+         * @description Replicator log level
+         * @example info
+         * @enum {string|null}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn' | null
+        /** @description Maximum number of copy connections per table */
+        max_copy_connections_per_table?: number | null
+        /** @description Maximum number of table sync workers */
+        max_table_sync_workers?: number | null
+        /** @description Complete memory backpressure replacement. Omission preserves it; `null` resets server defaults. */
+        memory_backpressure?: {
+          /**
+           * @description Memory usage ratio above which backpressure is activated
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Memory usage ratio below which backpressure is released
+           * @example 0.75
+           */
+          resume_threshold: number
+        } | null
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number | null
+        /**
+         * @description Publication name. Omission preserves the stored value; ETL rejects clearing it with `null`.
          * @example pub_orders
          */
-        publication_name: string
+        publication_name?: string | null
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number | null
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number | null
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number | null
+        /** @description Initial-copy selection. Omission preserves it; `null` resets to copying all tables. */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
+          | (never | null)
       }
       /**
        * @description Source id
@@ -11705,31 +13250,113 @@ export interface components {
       source_id: number
     }
     UpdateReplicationPipelineBody: {
-      /** @description Pipeline configuration */
+      /** @description Pipeline configuration patch */
       config: {
-        /** @description Batch configuration */
+        /** @description Complete batch configuration replacement. Omission preserves it; `null` resets server defaults. */
         batch?: {
+          /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
           /**
            * @description Maximum fill time in milliseconds
            * @example 200
            */
           max_fill_ms?: number
-        }
+          /**
+           * @description Ratio of process memory reserved for incoming stream batch bytes, in (0, 1]
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
+        } | null
         /**
-         * @description Behavior when the replication slot is invalidated
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
          * @example error
-         * @enum {string}
+         * @enum {string|null}
          */
-        invalidated_slot_behavior?: 'error' | 'recreate'
-        /** @description Maximum number of copy connections per table */
-        max_copy_connections_per_table?: number
-        /** @description Maximum number of table sync workers */
-        max_table_sync_workers?: number
+        invalidated_slot_behavior?: 'error' | 'recreate' | null
         /**
-         * @description Publication name
+         * @description Replicator log level
+         * @example info
+         * @enum {string|null}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn' | null
+        /** @description Maximum number of copy connections per table */
+        max_copy_connections_per_table?: number | null
+        /** @description Maximum number of table sync workers */
+        max_table_sync_workers?: number | null
+        /** @description Complete memory backpressure replacement. Omission preserves it; `null` resets server defaults. */
+        memory_backpressure?: {
+          /**
+           * @description Memory usage ratio above which backpressure is activated
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Memory usage ratio below which backpressure is released
+           * @example 0.75
+           */
+          resume_threshold: number
+        } | null
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number | null
+        /**
+         * @description Publication name. Omission preserves the stored value; ETL rejects clearing it with `null`.
          * @example pub_orders
          */
-        publication_name: string
+        publication_name?: string | null
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number | null
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number | null
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number | null
+        /** @description Initial-copy selection. Omission preserves it; `null` resets to copying all tables. */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
+          | (never | null)
       }
       /**
        * @description Destination id
@@ -12101,7 +13728,7 @@ export interface components {
                * @description Number of concurrent BigQuery Storage Write API connections.
                * @example 8
                */
-              connection_pool_size?: number
+              connection_pool_size?: number | null
               /**
                * @description BigQuery dataset id
                * @example analytics
@@ -12111,7 +13738,7 @@ export interface components {
                * @description Maximum data staleness in minutes
                * @example 5
                */
-              max_staleness_mins?: number
+              max_staleness_mins?: number | null
               /**
                * @description BigQuery project id
                * @example my-gcp-project
@@ -12119,6 +13746,33 @@ export interface components {
               project_id: string
               /** @description BigQuery service account key */
               service_account_key: string
+            }
+          }
+        | {
+            clickhouse: {
+              /**
+               * @description ClickHouse target database
+               * @example analytics
+               */
+              database: string
+              /**
+               * @description Table engine used for replicated tables. Defaults to `replacing_merge_tree` server-side when omitted.
+               * @example replacing_merge_tree
+               * @enum {string}
+               */
+              engine?: 'merge_tree' | 'replacing_merge_tree'
+              /** @description ClickHouse password. Omit for passwordless access. */
+              password?: string | null
+              /**
+               * @description ClickHouse HTTPS endpoint URL
+               * @example https://clickhouse.example.com:8443
+               */
+              url: string
+              /**
+               * @description ClickHouse user name
+               * @example default
+               */
+              user: string
             }
           }
         | {
@@ -12133,7 +13787,7 @@ export interface components {
                  * @description Namespace
                  * @example my-namespace
                  */
-                namespace?: string
+                namespace?: string | null
                 /**
                  * @description Project ref
                  * @example abcdefghijklmnopqrst
@@ -12163,89 +13817,436 @@ export interface components {
             }
           }
         | {
-            ducklake: {
+            ducklake:
+              | {
+                  /**
+                   * @description DuckLake catalog URL
+                   * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                   */
+                  catalog_url: string
+                  /**
+                   * @description DuckLake data path
+                   * @example s3://<bucket-name>/
+                   */
+                  data_path: string
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @default ducklake
+                   * @example ducklake
+                   */
+                  metadata_schema?: string
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  /**
+                   * @description S3-compatible storage access key ID
+                   * @example my-access-key
+                   */
+                  s3_access_key_id?: string | null
+                  /**
+                   * @description S3-compatible storage endpoint
+                   * @example 127.0.0.1:5000/s3
+                   */
+                  s3_endpoint?: string | null
+                  /**
+                   * @description S3-compatible storage region
+                   * @example us-east-1
+                   */
+                  s3_region?: string | null
+                  /**
+                   * @description S3-compatible storage secret access key
+                   * @example my-secret-key
+                   */
+                  s3_secret_access_key?: string | null
+                  /**
+                   * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                   * @example path
+                   * @enum {string|null}
+                   */
+                  s3_url_style?: 'path' | 'vhost' | null
+                  /**
+                   * @description Whether to use SSL for S3-compatible storage
+                   * @default true
+                   * @example false
+                   */
+                  s3_use_ssl?: boolean
+                }
+              | {
+                  catalog:
+                    | {
+                        /**
+                         * @description DuckLake catalog URL
+                         * @example postgres://user:pass@localhost:5432/ducklake_catalog
+                         */
+                        catalog_url: string
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /** @enum {string} */
+                        type: 'postgres_url'
+                      }
+                    | {
+                        /**
+                         * @description Schema used for DuckLake metadata tables stored in this PostgreSQL catalog. Overrides `metadata_schema` when provided.
+                         * @example ducklake
+                         */
+                        metadata_schema?: string | null
+                        /**
+                         * @description Number of concurrent DuckDB connections.
+                         * @example 4
+                         */
+                        pool_size?: number | null
+                        /**
+                         * @description Supabase project ref used as the DuckLake PostgreSQL catalog
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_project'
+                      }
+                  /**
+                   * @description Schema used for DuckLake metadata tables stored in PostgreSQL
+                   * @default ducklake
+                   * @example ducklake
+                   */
+                  metadata_schema?: string
+                  /**
+                   * @description Number of concurrent DuckDB connections.
+                   * @example 4
+                   */
+                  pool_size?: number | null
+                  storage:
+                    | {
+                        /**
+                         * @description DuckLake data path
+                         * @example s3://<bucket-name>/
+                         */
+                        data_path: string
+                        /**
+                         * @description S3-compatible storage access key ID
+                         * @example my-access-key
+                         */
+                        s3_access_key_id: string
+                        /**
+                         * @description S3-compatible storage endpoint
+                         * @example 127.0.0.1:5000/s3
+                         */
+                        s3_endpoint: string
+                        /**
+                         * @description S3-compatible storage region
+                         * @example us-east-1
+                         */
+                        s3_region: string
+                        /**
+                         * @description S3-compatible storage secret access key
+                         * @example my-secret-key
+                         */
+                        s3_secret_access_key: string
+                        /**
+                         * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
+                         * @example path
+                         * @enum {string|null}
+                         */
+                        s3_url_style?: 'path' | 'vhost' | null
+                        /**
+                         * @description Whether to use SSL for S3-compatible storage
+                         * @default true
+                         * @example false
+                         */
+                        s3_use_ssl?: boolean
+                        /** @enum {string} */
+                        type: 's3'
+                      }
+                    | {
+                        /**
+                         * @description Storage bucket id used for DuckLake data files
+                         * @example ducklake
+                         */
+                        bucket: string
+                        /**
+                         * @description Optional description for the generated Supabase Storage S3 credential
+                         * @example DuckLake replication destination
+                         */
+                        credential_description?: string
+                        /**
+                         * @description Optional path prefix inside the bucket for DuckLake data files
+                         * @example replication
+                         */
+                        path?: string
+                        /**
+                         * @description Supabase project ref whose Object Storage S3 API stores DuckLake data files
+                         * @example abcjuqabhgwjjutfvtpa
+                         */
+                        project_ref: string
+                        /** @enum {string} */
+                        type: 'supabase_storage'
+                      }
+                }
+          }
+        | {
+            snowflake: {
               /**
-               * @description DuckLake catalog URL
-               * @example postgres://user:pass@localhost:5432/ducklake_catalog
+               * @description Snowflake account identifier
+               * @example MYORG-MYACCOUNT
                */
-              catalog_url: string
+              account_id: string
               /**
-               * @description DuckLake data path
-               * @example s3://<bucket-name>/
+               * @description Snowflake target database
+               * @example ANALYTICS
                */
-              data_path: string
+              database: string
+              /** @description Snowflake RSA private key PEM contents */
+              private_key: string
+              /** @description Optional passphrase for encrypted private keys */
+              private_key_passphrase?: string | null
               /**
-               * @description Schema used for DuckLake metadata tables stored in PostgreSQL
-               * @default ducklake
-               * @example ducklake
+               * @description Optional Snowflake role
+               * @example ETL_ROLE
                */
-              metadata_schema?: string
+              role?: string | null
               /**
-               * @description Number of concurrent DuckDB connections.
-               * @example 4
+               * @description Snowflake target schema
+               * @example PUBLIC
                */
-              pool_size?: number
+              schema: string
               /**
-               * @description S3-compatible storage access key ID
-               * @example my-access-key
+               * @description Snowflake user configured for key-pair authentication
+               * @example ETL_USER
                */
-              s3_access_key_id: string
-              /**
-               * @description S3-compatible storage endpoint
-               * @example 127.0.0.1:5000/s3
-               */
-              s3_endpoint: string
-              /**
-               * @description S3-compatible storage region
-               * @example us-east-1
-               */
-              s3_region: string
-              /**
-               * @description S3-compatible storage secret access key
-               * @example my-secret-key
-               */
-              s3_secret_access_key: string
-              /**
-               * @description S3 URL style: `path` (MinIO/Supabase) or `vhost` (AWS)
-               * @example path
-               * @enum {string}
-               */
-              s3_url_style?: 'path' | 'vhost'
-              /**
-               * @description Whether to use SSL for S3-compatible storage
-               * @default true
-               * @example false
-               */
-              s3_use_ssl?: boolean
+              user: string
             }
           }
-    }
-    ValidateReplicationPipelineBody: {
       /** @description Pipeline configuration */
-      config: {
-        /** @description Batch configuration */
+      pipeline_config?: {
+        /** @description Batch configuration. Omit or use `null` for server defaults. */
         batch?: {
+          /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
           /**
            * @description Maximum fill time in milliseconds
            * @example 200
            */
           max_fill_ms?: number
-        }
+          /**
+           * @description Ratio of process memory reserved for incoming stream batch bytes, in (0, 1]
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
+        } | null
         /**
-         * @description Behavior when the replication slot is invalidated
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
          * @example error
-         * @enum {string}
+         * @enum {string|null}
          */
-        invalidated_slot_behavior?: 'error' | 'recreate'
+        invalidated_slot_behavior?: 'error' | 'recreate' | null
+        /**
+         * @description Replicator log level
+         * @example info
+         * @enum {string|null}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn' | null
         /** @description Maximum number of copy connections per table */
-        max_copy_connections_per_table?: number
+        max_copy_connections_per_table?: number | null
         /** @description Maximum number of table sync workers */
-        max_table_sync_workers?: number
+        max_table_sync_workers?: number | null
+        /** @description Memory-based backpressure configuration. Omission enables server defaults; `null` disables it. */
+        memory_backpressure?: {
+          /**
+           * @description Memory usage ratio above which backpressure is activated
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Memory usage ratio below which backpressure is released
+           * @example 0.75
+           */
+          resume_threshold: number
+        } | null
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number | null
         /**
          * @description Publication name
          * @example pub_orders
          */
         publication_name: string
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number | null
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number | null
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number | null
+        /** @description Selection rules for tables participating in initial table copy. Omit or use `null` to copy all tables. */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
+          | (never | null)
+      }
+      /**
+       * @description Source id
+       * @example 1
+       */
+      source_id?: number
+    }
+    ValidateReplicationPipelineBody: {
+      /** @description Pipeline configuration */
+      config: {
+        /** @description Batch configuration. Omit or use `null` for server defaults. */
+        batch?: {
+          /**
+           * @description Maximum preferred byte size for one source batch
+           * @example 8388608
+           */
+          max_bytes?: number
+          /**
+           * @description Maximum fill time in milliseconds
+           * @example 200
+           */
+          max_fill_ms?: number
+          /**
+           * @description Ratio of process memory reserved for incoming stream batch bytes, in (0, 1]
+           * @example 0.2
+           */
+          memory_budget_ratio?: number
+        } | null
+        /**
+         * @description Behavior when the replication slot is invalidated. `error` prevents pipeline startup and requires manual intervention. `recreate` automatically recreates the slot and restarts replication from scratch.
+         * @example error
+         * @enum {string|null}
+         */
+        invalidated_slot_behavior?: 'error' | 'recreate' | null
+        /**
+         * @description Replicator log level
+         * @example info
+         * @enum {string|null}
+         */
+        log_level?: 'debug' | 'error' | 'info' | 'trace' | 'warn' | null
+        /** @description Maximum number of copy connections per table */
+        max_copy_connections_per_table?: number | null
+        /** @description Maximum number of table sync workers */
+        max_table_sync_workers?: number | null
+        /** @description Memory-based backpressure configuration. Omission enables server defaults; `null` disables it. */
+        memory_backpressure?: {
+          /**
+           * @description Memory usage ratio above which backpressure is activated
+           * @example 0.85
+           */
+          activate_threshold: number
+          /**
+           * @description Memory usage ratio below which backpressure is released
+           * @example 0.75
+           */
+          resume_threshold: number
+        } | null
+        /**
+         * @description Milliseconds between one memory usage refresh and another
+         * @example 100
+         */
+        memory_refresh_interval_ms?: number | null
+        /**
+         * @description Publication name
+         * @example pub_orders
+         */
+        publication_name: string
+        /**
+         * @description Milliseconds between one replication lag refresh and another
+         * @example 10000
+         */
+        replication_lag_refresh_interval_ms?: number | null
+        /**
+         * @description Milliseconds between one retry and another for timed worker retries
+         * @example 10000
+         */
+        table_error_retry_delay_ms?: number | null
+        /**
+         * @description Maximum number of automatic timed retry attempts
+         * @example 5
+         */
+        table_error_retry_max_attempts?: number | null
+        /** @description Selection rules for tables participating in initial table copy. Omit or use `null` to copy all tables. */
+        table_sync_copy?:
+          | {
+              /** @enum {string} */
+              type: 'include_all_tables'
+            }
+          | {
+              /** @enum {string} */
+              type: 'skip_all_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be performed
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'include_tables'
+            }
+          | {
+              /**
+               * @description Table ids for which copy should be skipped
+               * @example [
+               *       16408
+               *     ]
+               */
+              table_ids: number[]
+              /** @enum {string} */
+              type: 'skip_tables'
+            }
+          | (never | null)
       }
       /**
        * @description Source id
@@ -13733,6 +15734,117 @@ export interface operations {
         }
       }
       /** @description Failed to update conversation custom fields */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConversationSyncController_escalateConversation: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EscalateConversationBody']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UpdateConversationLifecycleResponse']
+        }
+      }
+      /** @description User is not a participant in the conversation */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Failed to update conversation status */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConversationSyncController_syncConversationMessages: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SyncConversationMessagesBody']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SyncConversationMessagesResponse']
+        }
+      }
+      /** @description Supplied conversationId does not match the imported messages */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Failed to sync messages */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConversationSyncController_resolveConversation: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResolveConversationBody']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UpdateConversationLifecycleResponse']
+        }
+      }
+      /** @description User is not a participant in the conversation */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Failed to update conversation status */
       500: {
         headers: {
           [name: string]: unknown
@@ -20611,6 +22723,60 @@ export interface operations {
       }
     }
   }
+  ApiKeysLastUsedController_getApiKeysLastUsed: {
+    parameters: {
+      query?: {
+        iso_timestamp_start?: string
+        iso_timestamp_end?: string
+        days?: string
+      }
+      header?: never
+      path: {
+        /** @description Project ref */
+        ref: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AnalyticsResponse']
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden action */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Failed to get project's last-used API keys */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   AuthMetricsController_getAuthMetrics: {
     parameters: {
       query: {
@@ -21084,6 +23250,58 @@ export interface operations {
         content?: never
       }
       /** @description Failed to get project's metrics */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ProjectMetricsOtelController_getProjectMetricsOtel: {
+    parameters: {
+      query: {
+        interval: '15min' | '1hr' | '3hr' | '1day' | '3day' | '7day'
+      }
+      header?: never
+      path: {
+        /** @description Project ref */
+        ref: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AnalyticsResponse']
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden action */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Failed to get project's metrics (otel) */
       500: {
         headers: {
           [name: string]: unknown
@@ -21858,6 +24076,7 @@ export interface operations {
           | 'auth_mfa_phone_default'
           | 'auth_mfa_web_authn_default'
           | 'log_drain_default'
+          | 'etl_pipeline_default'
         /** @description Project ref */
         ref: string
       }
@@ -25051,6 +27270,49 @@ export interface operations {
       }
     }
   }
+  ProjectWakeController_wakeUpProject: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description Project ref */
+        ref: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProjectWakeResponse']
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden action */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   ProjectsController_getRegions: {
     parameters: {
       query: {
@@ -26047,6 +28309,64 @@ export interface operations {
       }
     }
   }
+  ReplicationPipelinesController_restartPipeline: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description Pipeline id */
+        pipeline_id: number
+        /** @description Project ref */
+        ref: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Pipeline restart accepted. */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden action */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Pipeline is not running. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unexpected error while restarting pipeline. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   ReplicationPipelinesController_getPipelineStatus: {
     parameters: {
       query?: never
@@ -26468,6 +28788,61 @@ export interface operations {
         content?: never
       }
       /** @description Unexpected error while listing publications. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ReplicationSourcesController_getCostEstimate: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        /** @description Publication name */
+        publication_name: string
+        /** @description Project ref */
+        ref: string
+        /** @description Source id */
+        source_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Cost estimate for replicating the publication. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CostEstimateResponse']
+        }
+      }
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden action */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rate limit exceeded */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unexpected error while estimating replication cost. */
       500: {
         headers: {
           [name: string]: unknown

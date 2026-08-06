@@ -16,7 +16,7 @@ import {
 } from 'ui'
 import { DialogDescription, DialogHeader } from 'ui/src/components/shadcn/ui/dialog'
 
-import { Admonition } from './../admonition'
+import { Admonition } from '../Admonition'
 
 export interface ConfirmationModalProps {
   loading?: boolean
@@ -129,7 +129,7 @@ export const ConfirmationModal = forwardRef<
             <Button
               size="medium"
               block
-              type="default"
+              variant="default"
               disabled={loading}
               onClick={() => onCancel()}
             >
@@ -139,10 +139,10 @@ export const ConfirmationModal = forwardRef<
             <Button
               block
               size="medium"
-              type={
+              variant={
                 variant === 'destructive' ? 'danger' : variant === 'warning' ? 'warning' : 'primary'
               }
-              htmlType="submit"
+              type="submit"
               loading={loading}
               disabled={loading || disabled}
               onClick={onSubmit}

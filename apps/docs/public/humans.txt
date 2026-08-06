@@ -8,6 +8,7 @@ Adam Mohammed
 Adam Mokan
 AJ Matias
 Akash Manimaran
+Akilesh Sethu
 Alaister Young
 Aleksi Immonen
 Alex Hall
@@ -23,6 +24,7 @@ Ana Mogul
 Andrew Valleteau
 Andrey A
 Angelico de los Reyes
+Anna Baker
 Ant Evans
 Ant Wilson
 Ariuna K
@@ -31,6 +33,7 @@ Artur Zakirov
 Artyom Borissov
 Aziz Quadri
 Barco Fourie
+Barry Roodt
 Beng Eu
 Benjamin Coenen
 Bo Lu
@@ -40,6 +43,8 @@ Brendan Stephens
 Brent Newson
 Brian Cullen
 Brent Schroeter
+Bruno Kilian
+Burhan A
 Carel de Waal
 Cameron Blackwood
 Cameron Michie
@@ -54,8 +59,8 @@ Chris Chapman (Chappie)
 Chris Copplestone
 Chris Gwilliams
 Chris Martin
+Chris Opland
 Chris Stockton
-Chris Ward
 Christian Funkhouser
 Claudiu Dragalina-Paraipan
 Clayton Kast
@@ -65,6 +70,7 @@ Colum Ferry
 Craig Cannon
 Cuong Do
 Dane Harrigan
+Daniel Guerra
 Daniel Mitterdorfer
 Daniel Velázquez Lara
 Danny White
@@ -89,6 +95,7 @@ Eduardo Gurgel
 Eleftheria Trivyzaki
 Eliot Whalan
 Emmett Folger
+Erfi Anugrah
 Eric Kharitonashvili
 Etienne Stalmans
 Eyal Ehrlich
@@ -97,6 +104,7 @@ Fady A
 Fatuma Abdullahi
 Felipe Stival
 Ferhat Elmas
+Filipe Cabaco
 Firas El Rachidi
 Francesco Sansalvadore
 Gabriel Claudino
@@ -109,6 +117,7 @@ Greg Marzouka
 Greg P
 Greg Richardson
 Gregor Vand
+Guillaume Faas
 Guilherme Souza
 Hanefi Önaldı
 Hannah Bowers
@@ -127,6 +136,7 @@ Jared Patterson
 Jason Farber
 Jean-Paul Argudo
 Jeff Smick
+Jefferson Venerando
 Jenny Kibiri
 Jeremias Menichelli
 Jess Fink
@@ -139,6 +149,7 @@ Joanna Michniewicz
 Joaquim Moreno
 Joel Low
 Joey Freeland
+Joey Lei
 John Fitzgerald
 Joel Martin
 Johan Bergström
@@ -154,6 +165,7 @@ Julian Domke
 Julien Goux
 Kai M
 Kalleby Santos
+Kanad Gupta
 Kanishk Dudeja
 Kamil Ogórek
 Kang Ming Tay
@@ -179,6 +191,7 @@ Liam Cloud Hogan
 Lindsay Moss
 Lukas Bernert
 Lukas Klingsbo
+Łukasz Korbasiewicz
 Łukasz Niemier
 Maksym Ionutsa
 Manuel Mendez
@@ -186,16 +199,19 @@ Manan Gupta
 Marcus Weiner
 Marija Milicevic
 Mark Burggraf
+Márton Boros
 Matthew Hambright
 Matt Hudson
 Matt Johnston
 Matt Rossman
+Matt Smiley
 Matthias Luft
 Mats Kindahl
 Mert Yerekapan
 Michal Kleczek
 Michelle Jubrey
 Miranda Limonczenko
+Mo Khan
 Monica Khoury
 Mrinal Paliwal
 Mykhailo Mischa Lieibenson
@@ -205,12 +221,14 @@ Nick Littman
 Nick Nowlan
 Nicola Ferraro
 Nicolas Nosenzo
+Nik Richers
 Noah Moss
 Nyannyacha
 Oli R
 Pamela Chia
 Patricia Szasz
 Patrick Crane
+Paul Bauer
 Paul Caselton
 Paul Cioanca
 Paul Copplestone
@@ -225,6 +243,7 @@ Qiao Han
 Quintin Willison
 Rafael Chacón
 Raminder Singh
+Rand Arete
 Raúl Barroso
 Riccardo Busetti
 Richard Kasprzak
@@ -238,6 +257,7 @@ Ryan Goulet
 Ryan Senior
 Ruan Maia
 Saba Pochkhua
+Sagar Shedge
 Sam Meech-Ward
 Sam Rome
 Sam Rose
@@ -250,9 +270,13 @@ Sean Romberg
 Sean Thompson
 Sergio Cioban Filho
 Shaii O
+Shane Adams
 Shane E
+Shaun Newman
+Shardul Borhade
 Shreekar Shetty
 Sreyas Udayavarman
+Stephanie Jackson (stejacks)
 Stephen Morgan
 Steve Chavez
 Steven Eubank
@@ -263,13 +287,17 @@ Sugu Sougoumarane
 Supun Sudaraka Kalidasa
 Taha Le Bras
 Tanun Chalermsinsuwan
+Tarun Khandelwal
 Taryn King
 Terry Sutton
+Terry Wilcox
+Thanya Nitithatsanakul
 Thomas E
 Tim Frietas
 Tim Palmer
 Timothy Lim
 Tina Ha
+Tobias Pfeiffer
 Tom Ashley
 Tom G
 Tomás Pozo
@@ -281,6 +309,7 @@ Utkarash Singh
 Victor Farazdagi
 Warwick Mitchell
 Wen Bo Xie
+Wendie Cheung
 Yorvi Arias
 Yuliya Marinova
 Zach Marinov
@@ -300,7 +329,7 @@ Supabase would not be possible without the work of some other amazing open sourc
 
 - Postgres - https://www.postgresql.org/
 - PostgREST - https://github.com/PostgREST
-- Kong - https://github.com/kong/
+- Envoy - https://github.com/envoyproxy/envoy
 - Next.js - https://nextjs.org/
 - Tailwind CSS - https://tailwindcss.com/
 - shadcn/ui - https://ui.shadcn.com/

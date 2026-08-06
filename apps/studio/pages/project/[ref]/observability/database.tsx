@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, Button } from 'ui'
 
+import { OBSERVABILITY_DOCS_HREFS } from '@/components/interfaces/Observability/Observability.constants'
 import ReportHeader from '@/components/interfaces/Reports/ReportHeader'
 import ReportPadding from '@/components/interfaces/Reports/ReportPadding'
 import { REPORT_DATERANGE_HELPER_LABELS } from '@/components/interfaces/Reports/Reports.constants'
@@ -16,15 +17,17 @@ import ReportWidget from '@/components/interfaces/Reports/ReportWidget'
 import { ReportChartUpsell } from '@/components/interfaces/Reports/v2/ReportChartUpsell'
 import { POOLING_OPTIMIZATIONS } from '@/components/interfaces/Settings/Database/ConnectionPooling/ConnectionPooling.constants'
 import DiskSizeConfigurationModal from '@/components/interfaces/Settings/Database/DiskSizeConfigurationModal'
+import { getInfrastructurePath } from '@/components/interfaces/Settings/Infrastructure/Infrastructure.utils'
 import { LogsDatePicker } from '@/components/interfaces/Settings/Logs/Logs.DatePickers'
 import UpgradePrompt from '@/components/interfaces/Settings/Logs/UpgradePrompt'
-import DefaultLayout from '@/components/layouts/DefaultLayout'
+import { DefaultLayout } from '@/components/layouts/DefaultLayout'
 import ObservabilityLayout from '@/components/layouts/ObservabilityLayout/ObservabilityLayout'
 import Table from '@/components/to-be-cleaned/Table'
 import { ButtonTooltip } from '@/components/ui/ButtonTooltip'
 import type { MultiAttribute } from '@/components/ui/Charts/ComposedChart.utils'
 import { LazyComposedChartHandler } from '@/components/ui/Charts/ComposedChartHandler'
 import { ReportSettings } from '@/components/ui/Charts/ReportSettings'
+import { DocsButton } from '@/components/ui/DocsButton'
 import { ObservabilityLink } from '@/components/ui/ObservabilityLink'
 import { ShortcutTooltip } from '@/components/ui/ShortcutTooltip'
 import { analyticsKeys } from '@/data/analytics/keys'
@@ -64,6 +67,8 @@ DatabaseReport.getLayout = (page) => (
 
 export type UpdateDateRange = (from: string, to: string) => void
 export default DatabaseReport
+
+const REPORT_TITLE = 'Database'
 
 const DatabaseUsage = () => {
   const { db, chart, ref } = useParams()
@@ -131,10 +136,7 @@ const DatabaseUsage = () => {
   )
   const entitledFeatures = getEntitlementSetValues()
 
-  const isSpendCapEnabled =
-    entitledFeatures.includes('database') &&
-    !org?.usage_billing_enabled &&
-    project?.cloud_provider !== 'FLY'
+  const isSpendCapEnabled = entitledFeatures.includes('database') && !org?.usage_billing_enabled
 
   const showDiskIOBurstBalanceChart = useFlag('showDiskIOBurstBalanceChart')
   const showMemoryCommitmentChart = useFlag('showMemoryCommitmentChart')
@@ -227,17 +229,18 @@ const DatabaseUsage = () => {
 
   return (
     <>
-      <ReportHeader showDatabaseSelector title="Database" />
+      <ReportHeader showDatabaseSelector title={REPORT_TITLE} />
       <ReportStickyNav
         content={
-          <>
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
+            <DocsButton href={OBSERVABILITY_DOCS_HREFS.database} topic={REPORT_TITLE} />
             <ShortcutTooltip
               shortcutId={SHORTCUT_IDS.OBSERVABILITY_REFRESH}
               label="Refresh report"
               side="bottom"
             >
               <Button
-                type="default"
+                variant="default"
                 disabled={isRefreshing}
                 icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
                 className="w-7"
@@ -275,7 +278,7 @@ const DatabaseUsage = () => {
                 </div>
               )}
             </div>
-          </>
+          </div>
         }
       >
         {selectedDateRange &&
@@ -351,26 +354,28 @@ const DatabaseUsage = () => {
           renderer={(props) => {
             return (
               <div>
-                <div className="col-span-4 inline-grid grid-cols-12 gap-12 w-full mt-5">
-                  <div className="grid gap-2 col-span-4 xl:col-span-2">
-                    <h5>Space used</h5>
-                    <span className="text-lg">{formatBytes(databaseSizeBytes, 2, 'GB')}</span>
+                <div className="flex flex-wrap items-center gap-8 mt-5">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-foreground-light">Space used</p>
+                    <span className="text-lg font-semibold text-foreground">
+                      {formatBytes(databaseSizeBytes, 2, 'GB')}
+                    </span>
                   </div>
-                  <div className="grid gap-2 col-span-4 xl:col-span-3">
-                    <h5>Provisioned disk size</h5>
-                    <span className="text-lg">{currentDiskSize} GB</span>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-foreground-light">Provisioned disk size</p>
+                    <span className="text-lg font-semibold text-foreground">
+                      {currentDiskSize} GB
+                    </span>
                   </div>
 
-                  <div className="col-span-full lg:col-span-4 xl:col-span-7 lg:text-right">
+                  <div className="ml-auto">
                     {project?.cloud_provider === 'AWS' ? (
-                      <Button asChild type="default">
-                        <Link href={`/project/${ref}/settings/compute-and-disk`}>
-                          Increase disk size
-                        </Link>
+                      <Button asChild variant="default">
+                        <Link href={getInfrastructurePath(ref)}>Increase disk size</Link>
                       </Button>
                     ) : (
                       <ButtonTooltip
-                        type="default"
+                        variant="default"
                         disabled={!canUpdateDiskSizeConfig}
                         onClick={() => setshowIncreaseDiskSizeModal(true)}
                         tooltip={{
@@ -388,8 +393,12 @@ const DatabaseUsage = () => {
                   </div>
                 </div>
 
-                <h3 className="mt-8 text-sm">Large Objects</h3>
-                {!props.isLoading && props.data.length === 0 && <span>No large objects found</span>}
+                <p className="mt-8 text-sm font-medium text-foreground-light">Large Objects</p>
+                {!props.isLoading && props.data.length === 0 && (
+                  <span className="text-sm text-foreground-light mt-2 block">
+                    No large objects found
+                  </span>
+                )}
                 {!props.isLoading && props.data.length > 0 && (
                   <Table
                     className="space-y-3 mt-4"
@@ -435,7 +444,7 @@ const DatabaseUsage = () => {
                       inactive.
                     </p>
 
-                    <Button asChild type="default" icon={<ExternalLink />}>
+                    <Button asChild variant="default" icon={<ExternalLink />}>
                       <Link
                         href={`${DOCS_URL}/guides/platform/database-size#disk-space-usage`}
                         target="_blank"

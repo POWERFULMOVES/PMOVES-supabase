@@ -51,23 +51,15 @@ const formatGigabyteLimit = (limit: number) => {
   return `${limit} GB`
 }
 
-const formatCount = (value: number) => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`
-  return value.toLocaleString()
-}
-
-const formatCountLimit = (limit: number) => {
-  if (limit >= 1_000_000) return `${(limit / 1_000_000).toFixed(0)}M`
-  if (limit >= 1_000) return `${(limit / 1_000).toFixed(0)}k`
-  return limit.toLocaleString()
-}
+// Show counts in full with thousands separators (e.g. `50,000`) rather than abbreviated
+// (`50k`), to match the pricing page and avoid ambiguity around plan limits.
+const formatCount = (value: number) => value.toLocaleString()
 
 const formatValue = (value: number, unit: MetricUnit) =>
   unit === 'gigabytes' ? formatGigabytes(value) : formatCount(value)
 
 const formatLimit = (limit: number, unit: MetricUnit) =>
-  unit === 'gigabytes' ? formatGigabyteLimit(limit) : formatCountLimit(limit)
+  unit === 'gigabytes' ? formatGigabyteLimit(limit) : formatCount(limit)
 
 const RING_RADIUS = 7
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
@@ -121,8 +113,8 @@ const ProgressRing = ({
   )
 }
 
-// The upgrade CTA placement experiment variant this card represents. Used as the telemetry
-// `source` + `placement` value. Kept as a constant so the tracking stays explicit.
+// The upgrade CTA surface this card represents. Used as the telemetry `source` +
+// `placement` value. Kept as a constant so the tracking stays explicit.
 const PLACEMENT = 'org_projects_list'
 
 const CompactMetricRow = ({
@@ -187,10 +179,10 @@ const SkeletonMetricRow = ({ label }: { label: string }) => (
 )
 
 /**
- * Renders the upgrade CTA's plan-usage card as the first tile in the org project list
- * (the `org_projects_list` experiment variant). The parent is responsible for gating on
- * the experiment variant + free plan — this component only renders the visual sections
- * once usage data is available. Shaped like a `ProjectCard` so it reads as another tile.
+ * Renders the upgrade CTA's plan-usage card in the org project list (the
+ * `org_projects_list` CTA placement). The parent is responsible for gating on free plan —
+ * this component only renders the visual sections once usage data is available. Shaped
+ * like a `ProjectCard` so it reads as another tile.
  */
 export const PlanUsageCard = () => {
   const track = useTrack()

@@ -51,6 +51,7 @@ import type { AvailableColumn, Table, TableOption } from './Wrappers.types'
 import { getTableFormSchema } from './Wrappers.utils'
 import { ActionBar } from '@/components/interfaces/TableGridEditor/SidePanelEditor/ActionBar'
 import { useSchemasQuery } from '@/data/database/schemas-query'
+import { useSchemasFilteredForHighAvailability } from '@/hooks/misc/useHighAvailability'
 import { useSelectedProjectQuery } from '@/hooks/misc/useSelectedProject'
 
 export type WrapperTableEditorProps = {
@@ -119,7 +120,7 @@ const WrapperTableEditor = ({
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
                 <Button
-                  type="default"
+                  variant="default"
                   role="combobox"
                   aria-expanded={open}
                   aria-controls={listboxId}
@@ -239,10 +240,11 @@ const TableForm = ({
   initialData: any
 }) => {
   const { data: project } = useSelectedProjectQuery()
-  const { data: schemas, isPending: isLoading } = useSchemasQuery({
+  const { data: allSchemas, isPending: isLoading } = useSchemasQuery({
     projectRef: project?.ref,
     connectionString: project?.connectionString,
   })
+  const schemas = useSchemasFilteredForHighAvailability(allSchemas)
 
   const requiredOptions: TableOption[] = []
   const optionalOptions: TableOption[] = []
@@ -488,7 +490,7 @@ const TableForm = ({
                   enumTypes={[]}
                 />
                 <Button
-                  type="outline"
+                  variant="outline"
                   icon={<XIcon strokeWidth={1.5} />}
                   onClick={() => removeColumn(columnIndex)}
                   className="self-end -translate-y-1.5 px-1.5"
@@ -498,7 +500,7 @@ const TableForm = ({
               </div>
             ))}
             <Button
-              type="default"
+              variant="default"
               onClick={() => appendColumn({ name: '', type: 'text' })}
               className="self-start"
             >
