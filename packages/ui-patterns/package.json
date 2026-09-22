@@ -813,7 +813,7 @@
     "sse.js": "^2.2.0",
     "tsconfig": "workspace:*",
     "ui": "workspace:*",
-    "unist-util-visit": "^5.0.0",
+    "unist-util-visit": "^5.1.0",
     "valtio": "catalog:",
     "zod": "catalog:"
   },

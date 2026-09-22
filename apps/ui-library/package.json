@@ -64,7 +64,7 @@
     "sonner": "^1.5.0",
     "ui": "workspace:*",
     "ui-patterns": "workspace:*",
-    "unist-util-visit": "^5.0.0",
+    "unist-util-visit": "^5.1.0",
     "vaul": "^1.1.2",
     "velite": "catalog:",
     "y-monaco": "^0.1.6",
