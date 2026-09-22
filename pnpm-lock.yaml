@@ -1087,8 +1087,8 @@ importers:
         specifier: ^3.13.24
         version: 3.14.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@types/d3-geo':
-        specifier: ^3.1.0
-        version: 3.1.0
+        specifier: ^3.1.1
+        version: 3.1.1
       '@uidotdev/usehooks':
         specifier: ^2.4.1
         version: 2.4.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1990,8 +1990,8 @@ importers:
         specifier: ^1.8.4
         version: 1.8.4
       '@types/d3-geo':
-        specifier: ^3.1.0
-        version: 3.1.0
+        specifier: ^3.1.1
+        version: 3.1.1
       '@types/mdast':
         specifier: ^4.0.4
         version: 4.0.4
@@ -8805,8 +8805,8 @@ packages:
   '@types/d3-geo@2.0.7':
     resolution: {integrity: sha512-RIXlxPdxvX+LAZFv+t78CuYpxYag4zuw9mZc+AwfB8tZpKU90rMEn2il2ADncmeZlb7nER9dDsJpRisA3lRvjA==}
 
-  '@types/d3-geo@3.1.0':
-    resolution: {integrity: sha512-856sckF0oP/diXtS4jNsiQw/UuK5fQG8l/a9VVLeSouf1/PPbBE1i1W852zVwKwYCBkFJJB7nCFTbk6UMEXBOQ==}
+  '@types/d3-geo@3.1.1':
+    resolution: {integrity: sha512-65Emv9fQiQQqphLlRkuQ5ypPsOmWPhtBGCMv61JDPEPMvsx+gzhGf74yw1a78xFKPj6zw4AgQICJoQv0vK9M2w==}
 
   '@types/d3-hierarchy@3.1.6':
     resolution: {integrity: sha512-qlmD/8aMk5xGorUvTUWHCiumvgaUXYldYjNVOWtYoTYY/L+WwIEAmJxUmTgr9LoGNG0PPAOmqMDJVDPc7DOpPw==}
@@ -8903,6 +8903,9 @@ packages:
 
   '@types/geojson@7946.0.12':
     resolution: {integrity: sha512-uK2z1ZHJyC0nQRbuovXFt4mzXDwf27vQeUWNhfKGwRcWW429GOhP8HxUHlM6TLH4bzmlv/HlEjpvJh3JfmGsAA==}
+
+  '@types/geojson@7946.0.16':
+    resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
   '@types/graphql-validation-complexity@0.4.4':
     resolution: {integrity: sha512-/0AmF5HYHmLErXRky/be86E4hAVO2LE5ejHdy3kf1rASgzBDG3Yb1yqoHxrZz+Nk72jt2UWCfa6DSfdpHDkuzg==}
@@ -25447,7 +25450,7 @@ snapshots:
   '@types/d3-contour@3.0.6':
     dependencies:
       '@types/d3-array': 3.0.8
-      '@types/geojson': 7946.0.12
+      '@types/geojson': 7946.0.16
 
   '@types/d3-delaunay@6.0.4': {}
 
@@ -25473,9 +25476,9 @@ snapshots:
     dependencies:
       '@types/geojson': 7946.0.12
 
-  '@types/d3-geo@3.1.0':
+  '@types/d3-geo@3.1.1':
     dependencies:
-      '@types/geojson': 7946.0.12
+      '@types/geojson': 7946.0.16
 
   '@types/d3-hierarchy@3.1.6': {}
 
@@ -25545,7 +25548,7 @@ snapshots:
       '@types/d3-fetch': 3.0.7
       '@types/d3-force': 3.0.9
       '@types/d3-format': 3.0.4
-      '@types/d3-geo': 3.1.0
+      '@types/d3-geo': 3.1.1
       '@types/d3-hierarchy': 3.1.6
       '@types/d3-interpolate': 3.0.4
       '@types/d3-path': 1.0.9
@@ -25599,6 +25602,8 @@ snapshots:
   '@types/file-saver@2.0.5': {}
 
   '@types/geojson@7946.0.12': {}
+
+  '@types/geojson@7946.0.16': {}
 
   '@types/graphql-validation-complexity@0.4.4':
     dependencies:

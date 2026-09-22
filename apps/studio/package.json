@@ -83,7 +83,7 @@
     "@tanstack/react-start": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@tanstack/react-virtual": "^3.13.24",
-    "@types/d3-geo": "^3.1.0",
+    "@types/d3-geo": "^3.1.1",
     "@uidotdev/usehooks": "^2.4.1",
     "@vercel/functions": "^2.1.0",
     "@xyflow/react": "^12.10.1",
