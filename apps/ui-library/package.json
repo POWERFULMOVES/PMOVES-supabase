@@ -25,7 +25,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.1.1",
     "@monaco-editor/react": "catalog:",
-    "@react-router/fs-routes": "^7.4.0",
+    "@react-router/fs-routes": "^8.4.0",
     "@supabase-labs/y-supabase": "0.1.0",
     "@supabase/postgrest-js": "catalog:",
     "@supabase/supa-mdx-lint": "0.2.6-alpha",
