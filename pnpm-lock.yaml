@@ -522,8 +522,8 @@ importers:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       react-error-boundary:
-        specifier: ^4.0.12
-        version: 4.0.13(react@19.2.6)
+        specifier: ^6.1.5
+        version: 6.1.5(@types/react@19.2.14)(react@19.2.6)
       react-hook-form:
         specifier: ^7.71.2
         version: 7.72.1(react@19.2.6)
@@ -1219,8 +1219,8 @@ importers:
         specifier: ^5.3.1
         version: 5.4.1
       path-to-regexp:
-        specifier: ^8.0.0
-        version: 8.4.1
+        specifier: ^8.4.2
+        version: 8.4.2
       radix-ui:
         specifier: 'catalog:'
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1240,8 +1240,8 @@ importers:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       react-error-boundary:
-        specifier: ^4.0.13
-        version: 4.0.13(react@19.2.6)
+        specifier: ^6.1.5
+        version: 6.1.5(@types/react@19.2.14)(react@19.2.6)
       react-grid-layout:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1704,7 +1704,7 @@ importers:
         specifier: ^14.3.8
         version: 14.3.8(react@19.2.6)
       react-router:
-        specifier: ^7.13.2
+        specifier: ^7.15.0
         version: 7.18.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       rimraf:
         specifier: ^4.1.3
@@ -2855,8 +2855,8 @@ importers:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       react-error-boundary:
-        specifier: ^4.0.12
-        version: 4.0.13(react@19.2.6)
+        specifier: ^6.1.5
+        version: 6.1.5(@types/react@19.2.14)(react@19.2.6)
       react-hook-form:
         specifier: ^7.71.2
         version: 7.72.1(react@19.2.6)
@@ -15465,8 +15465,8 @@ packages:
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
 
-  path-to-regexp@8.4.1:
-    resolution: {integrity: sha512-fvU78fIjZ+SBM9YwCknCvKOUKkLVqtWDVctl0s7xIqfmfb38t2TT4ZU2gHm+Z8xGwgW+QWEU3oQSAzIbo89Ggw==}
+  path-to-regexp@8.4.2:
+    resolution: {integrity: sha512-qRcuIdP69NPm4qbACK+aDogI5CBDMi1jKe0ry5rSQJz8JVLsC7jV8XpiJjGRLLol3N+R5ihGYcrPLTno6pAdBA==}
 
   path-type@3.0.0:
     resolution: {integrity: sha512-T2ZUsdZFHgA3u4e5PfPbjd7HDDpxPnQb5jN0SrDsjNSuVXHJqtwTnWqG0B1jZrgmJ/7lj1EmVIByWt1gxGkWvg==}
@@ -16082,10 +16082,14 @@ packages:
     peerDependencies:
       react: '>= 16.8 || 18.0.0'
 
-  react-error-boundary@4.0.13:
-    resolution: {integrity: sha512-b6PwbdSv8XeOSYvjt8LpgpKrZ0yGdtZokYwkwV2wlcZbxgopHX/hgPl5VgpnoVOWd868n1hktM8Qm4b+02MiLQ==}
+  react-error-boundary@6.1.5:
+    resolution: {integrity: sha512-l2nk+KhgM6e79tAiHEs3tXTdiTW4ARniKYMQN+cLY5vQFpDOkxuXKIC4uIwYuIKoMpFQ6jEbQz9wBArUmq7GWA==}
     peerDependencies:
-      react: '>=16.13.1'
+      '@types/react': ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   react-from-dom@0.6.2:
     resolution: {integrity: sha512-qvWWTL/4xw4k/Dywd41RBpLQUSq97csuv15qrxN+izNeLYlD9wn5W8LspbfYe5CWbaSdkZ72BsaYBPQf2x4VbQ==}
@@ -33944,7 +33948,7 @@ snapshots:
 
   path-to-regexp@6.3.0: {}
 
-  path-to-regexp@8.4.1: {}
+  path-to-regexp@8.4.2: {}
 
   path-type@3.0.0:
     dependencies:
@@ -34566,10 +34570,11 @@ snapshots:
       prop-types: 15.8.1
       react: 19.2.6
 
-  react-error-boundary@4.0.13(react@19.2.6):
+  react-error-boundary@6.1.5(@types/react@19.2.14)(react@19.2.6):
     dependencies:
-      '@babel/runtime': 7.26.10
       react: 19.2.6
+    optionalDependencies:
+      '@types/react': 19.2.14
 
   react-from-dom@0.6.2(react@19.2.6):
     dependencies:
@@ -35329,7 +35334,7 @@ snapshots:
       depd: 2.0.0
       is-promise: 4.0.0
       parseurl: 1.3.3
-      path-to-regexp: 8.4.1
+      path-to-regexp: 8.4.2
     transitivePeerDependencies:
       - supports-color
 
